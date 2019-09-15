@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-namespace VKHelper {
+namespace HLVulkan {
 
     VkResult Buffer::createBuffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage, VkBuffer &buffer) {
 
@@ -94,4 +94,4 @@ namespace VKHelper {
         }
     }
 
-} // namespace VKHelper
+} // namespace HLVulkan

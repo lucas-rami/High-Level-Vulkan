@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-namespace VKHelper {
+namespace HLVulkan {
 
     static VkResult createShaderModule(VkDevice logical, const std::vector<char> &code, VkShaderModule &shaderModule) {
 
@@ -72,4 +72,4 @@ namespace VKHelper {
         }
     }
 
-} // namespace VKHelper
+} // namespace HLVulkan

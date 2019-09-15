@@ -1,6 +1,6 @@
 #include "vk_helper.hpp"
 
-namespace VKHelper {
+namespace HLVulkan {
 
     Fence::Fence(Device device) : device(device) {
 
@@ -19,4 +19,4 @@ namespace VKHelper {
         vkDestroyFence(device.logical, fence, nullptr);
     }
 
-} // namespace VKHelper
+} // namespace HLVulkan

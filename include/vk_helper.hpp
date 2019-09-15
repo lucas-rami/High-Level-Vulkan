@@ -59,7 +59,7 @@
         }                                                                                                                                                      \
     }
 
-namespace VKHelper {
+namespace HLVulkan {
 
     bool hasStencilComponent(VkFormat format);
 
@@ -216,6 +216,6 @@ namespace VKHelper {
         ~Fence();
     };
 
-} // namespace VKHelper
+} // namespace HLVulkan
 
 #endif //__VULKAN_HELPERS_H__

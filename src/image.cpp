@@ -2,7 +2,7 @@
 
 #include <optional>
 
-namespace VKHelper {
+namespace HLVulkan {
 
     VkResult Image::createImage(VkDevice device, VkExtent2D extent, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkImage &image, VkImageLayout initLayout) {
 
@@ -212,4 +212,4 @@ namespace VKHelper {
         }
     }
 
-} // namespace VKHelper
+} // namespace HLVulkan

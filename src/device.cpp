@@ -1,6 +1,6 @@
 #include "vk_helper.hpp"
 
-namespace VKHelper {
+namespace HLVulkan {
 
     Device::Device(VkPhysicalDevice physicalDevice, VkDevice device) : physical(physicalDevice), logical(device){}
     Device::Device(const Device &device) : physical(device.physical), logical(device.logical){}
@@ -44,4 +44,4 @@ namespace VKHelper {
                                    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
     }
 
-} // namespace VKHelper
+} // namespace HLVulkan

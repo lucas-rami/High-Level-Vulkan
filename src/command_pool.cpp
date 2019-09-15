@@ -1,6 +1,6 @@
 #include "vk_helper.hpp"
 
-namespace VKHelper {
+namespace HLVulkan {
 
     CommandPool::CommandPool(Device device, Queue queue) : device(device), queue(queue) {
 
@@ -101,4 +101,4 @@ namespace VKHelper {
 
     CommandPool::~CommandPool() { vkDestroyCommandPool(device.logical, pool, nullptr); }
 
-} // namespace VKHelper
+} // namespace HLVulkan
