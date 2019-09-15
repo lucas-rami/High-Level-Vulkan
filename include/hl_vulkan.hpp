@@ -1,5 +1,5 @@
-#ifndef __VULKAN_HELPERS_HPP__
-#define __VULKAN_HELPERS_HPP__
+#ifndef __HL_VULKAN_HPP__
+#define __HL_VULKAN_HPP__
 
 #include <assert.h>
 #include <iostream>
@@ -218,4 +218,4 @@ namespace HLVulkan {
 
 } // namespace HLVulkan
 
-#endif //__VULKAN_HELPERS_H__
+#endif //__HL_VULKAN_HPP__

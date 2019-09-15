@@ -22,6 +22,7 @@ set(SOURCES ${SRC_DIR}/buffer.cpp
             ${SRC_DIR}/image.cpp
             ${SRC_DIR}/shader.cpp
 )
+
 # Build the executable
 set(LIBRARY HLVulkan)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
