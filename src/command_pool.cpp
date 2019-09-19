@@ -1,4 +1,4 @@
-#include "hl_vulkan.hpp"
+#include "command_pool.hpp"
 
 namespace HLVulkan {
 
@@ -36,16 +36,14 @@ namespace HLVulkan {
         allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
 
         VkResult ret;
-        // Resize the vector to 0 if the allocation fails
         if ((ret = vkAllocateCommandBuffers(device.logical, &allocInfo, commandBuffers.data())) != VK_SUCCESS) {
+            // Resize the vector to 0 if the allocation fails
             commandBuffers.resize(0);
         }
         return ret;
     }
 
     VkCommandBuffer CommandPool::beginSingleTimeCommands() {
-
-        VK_CHECK_NULL(singleTimeCommandBuffer);
 
         VkCommandBufferAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -66,9 +64,6 @@ namespace HLVulkan {
     }
 
     VkResult CommandPool::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
-
-        ASSERT_MSG(commandBuffer == singleTimeCommandBuffer, "argument buffer is invalid");
-        singleTimeCommandBuffer = VK_NULL_HANDLE;
 
         // End recording
         VkResult ret;
@@ -94,10 +89,12 @@ namespace HLVulkan {
         return ret;
     }
 
-    const VkCommandBuffer CommandPool::getCommandBuffer(size_t index) {
+    VkCommandBuffer CommandPool::getCommandBuffer(size_t index) {
         ASSERT_MSG(index < commandBuffers.size(), "invalid index");
         return commandBuffers[index];
     }
+
+    VkCommandPool CommandPool::getPool() { return pool; }
 
     CommandPool::~CommandPool() { vkDestroyCommandPool(device.logical, pool, nullptr); }
 

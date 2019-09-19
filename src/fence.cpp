@@ -1,4 +1,4 @@
-#include "hl_vulkan.hpp"
+#include "fence.hpp"
 
 namespace HLVulkan {
 
@@ -11,12 +11,8 @@ namespace HLVulkan {
         VK_CHECK_FAIL(vkCreateFence(device.logical, &fenceInfo, nullptr, &fence), "failed to create fence");
     }
 
-    const VkFence Fence::getFence() {
-        return fence; 
-    }    
+    const VkFence Fence::getFence() { return fence; }
 
-    Fence::~Fence() {
-        vkDestroyFence(device.logical, fence, nullptr);
-    }
+    Fence::~Fence() { vkDestroyFence(device.logical, fence, nullptr); }
 
 } // namespace HLVulkan

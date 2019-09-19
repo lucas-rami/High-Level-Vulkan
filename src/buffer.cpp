@@ -1,4 +1,4 @@
-#include "hl_vulkan.hpp"
+#include "buffer.hpp"
 
 #include <string.h>
 
@@ -17,7 +17,8 @@ namespace HLVulkan {
 
     Buffer::Buffer(Device device, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) : device(device), usage(usage), memProperties(properties) {}
 
-    Buffer::Buffer(Device device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) : device(device), size(size), usage(usage), memProperties(properties) {
+    Buffer::Buffer(Device device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+        : device(device), size(size), usage(usage), memProperties(properties) {
         VK_CHECK_FAIL(createBuffer(device.logical, size, usage, buffer), "buffer creation failed");
         VK_CHECK_FAIL(bind(), "buffer bind failed");
     }
@@ -49,7 +50,7 @@ namespace HLVulkan {
         return vkBindBufferMemory(device.logical, buffer, memory, 0);
     }
 
-    const VkResult Buffer::mapAndCopy(void *dataToCopy, size_t size) {
+    VkResult Buffer::mapAndCopy(const void *dataToCopy, size_t size) {
 
         VK_CHECK_NOT_NULL(memory);
         ASSERT_MSG(memProperties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, "memory is not mappable");
@@ -62,9 +63,9 @@ namespace HLVulkan {
         return VK_SUCCESS;
     }
 
-    const VkResult Buffer::copyTo(const Buffer &dstBuffer, CommandPool &commandPool) {
+    VkResult Buffer::copyTo(const Buffer &dstBuffer, CommandPool &commandPool) {
 
-        //@ TODO: buffers must be bind to memory ?
+        // @TODO: buffers must be bind to memory ?
         ASSERT_MSG(size <= dstBuffer.size, "destination buffer is bigger than source buffer");
         ASSERT_MSG((usage & VK_BUFFER_USAGE_TRANSFER_SRC_BIT) != 0, "source buffer doesn't have required usage flag");
         ASSERT_MSG((dstBuffer.usage & VK_BUFFER_USAGE_TRANSFER_DST_BIT) != 0, "destination buffer doesn't have required usage flag");
@@ -79,13 +80,9 @@ namespace HLVulkan {
         return commandPool.endSingleTimeCommands(commandBuffer);
     }
 
-    const VkBufferUsageFlags Buffer::getUsageFlags() {
-        return usage;
-    }
+    VkBufferUsageFlags Buffer::getUsageFlags() { return usage; }
 
-    const VkBuffer Buffer::getBuffer() {
-        return buffer;
-    }
+    VkBuffer Buffer::getBuffer() { return buffer; }
 
     Buffer::~Buffer() {
         vkDestroyBuffer(device.logical, buffer, nullptr);
