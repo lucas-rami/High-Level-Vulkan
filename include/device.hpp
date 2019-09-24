@@ -10,7 +10,8 @@ namespace HLVulkan {
   /**
    * @brief Packages a VkPhysicalDevice together with a VkDevice.
    */
-  struct Device {
+  class Device {
+  public:
     // The physical device
     const VkPhysicalDevice physical;
     // The logical device
@@ -36,8 +37,8 @@ namespace HLVulkan {
      * @brief Finds a suitable memory type on the device given a bitmask of
      * supported memory types and a set of desired properties.
      *
-     * @param[in] typeFilter A bitmask of supported memory types on the device. Must
-     * be the memoryTypeBits field of a VkMemoryRequirements struct.
+     * @param[in] typeFilter A bitmask of supported memory types on the device.
+     * Must be the memoryTypeBits field of a VkMemoryRequirements struct.
      * @param[in] properties A set of desired properties.
      *
      * @return A suitable memory type of minimum index if it exists,

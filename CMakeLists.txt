@@ -26,6 +26,7 @@ set(SOURCES ${SRC_DIR}/buffer.cpp
             ${SRC_DIR}/render_pass_factory.cpp
             ${SRC_DIR}/render_pass_spec.cpp
             ${SRC_DIR}/shader.cpp
+            ${SRC_DIR}/surface.cpp
             ${SRC_DIR}/vertex_format.cpp
             ${SRC_DIR}/window.cpp
 )

@@ -1,7 +1,8 @@
 #ifndef __HL_VULKAN_INSTANCE_HPP__
 #define __HL_VULKAN_INSTANCE_HPP__
 
-#include "hl_vulkan.hpp"
+#include <string>
+#include <vulkan/vulkan.h>
 
 namespace HLVulkan {
 
@@ -11,12 +12,17 @@ namespace HLVulkan {
   class Instance {
   public:
     /**
-     * @brief Constructs a Vulkan instance. Fails if GLFW extensions required to
+     * @brief Creates a Vulkan instance. Fails if GLFW extensions required to
      * interface with the window system aren't supported.
      *
      * @param[in] appName The application name.
      */
     Instance(const std::string &appName);
+
+    /**
+     * @brief Returns the packaged VkInstance.
+     */
+    VkInstance operator*() const;
 
     /**
      * @brief Destroys the created instance.
@@ -25,7 +31,7 @@ namespace HLVulkan {
 
   private:
     // The instance
-    VkInstance instance = VK_NULL_HANDLE; 
+    VkInstance instance = VK_NULL_HANDLE;
   };
 
 } // namespace HLVulkan

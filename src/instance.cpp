@@ -1,4 +1,5 @@
 #include "instance.hpp"
+#include "hl_vulkan.hpp"
 
 #include <GLFW/glfw3.h>
 #include <string.h>
@@ -63,6 +64,8 @@ namespace HLVulkan {
     VK_CHECK_FAIL(vkCreateInstance(&createInfo, nullptr, &instance),
                   "failed to create instance");
   }
+
+  VkInstance Instance::operator*() const { return instance; }
 
   Instance::~Instance() { vkDestroyInstance(instance, nullptr); }
 
