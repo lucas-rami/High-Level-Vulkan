@@ -65,7 +65,7 @@ namespace HLVulkan {
   /**
    * @brief Checks whether a format has a stencil component.
    *
-   * @param format The format.
+   * @param[in] format The format.
    *
    * @return true if the format has a stencil component.
    */

@@ -11,22 +11,24 @@ namespace HLVulkan {
    * @brief Packages a VkPhysicalDevice together with a VkDevice.
    */
   struct Device {
+    // The physical device
     const VkPhysicalDevice physical;
+    // The logical device
     const VkDevice logical;
 
     /**
      * @brief Creates a Device instance from a VkPhysicalDevice and a VkDevice.
      * The logical device must have been created from the physical one.
      *
-     * @param physicalDevice A physical device.
-     * @param device A logical device.
+     * @param[in] physicalDevice A physical device.
+     * @param[in] device A logical device.
      */
     Device(VkPhysicalDevice physicalDevice, VkDevice device);
 
     /**
      * @brief Straightforward copy constructor (shallow copies all fields).
      *
-     * @param device The device to copy.
+     * @param[in] device The device to copy.
      */
     Device(const Device &device);
 
@@ -34,9 +36,9 @@ namespace HLVulkan {
      * @brief Finds a suitable memory type on the device given a bitmask of
      * supported memory types and a set of desired properties.
      *
-     * @param typeFilter A bitmask of supported memory types on the device. Must
+     * @param[in] typeFilter A bitmask of supported memory types on the device. Must
      * be the memoryTypeBits field of a VkMemoryRequirements struct.
-     * @param properties A set of desired properties.
+     * @param[in] properties A set of desired properties.
      *
      * @return A suitable memory type of minimum index if it exists,
      * NO_SUITABLE_MEMORY_TYPE otherwise.
@@ -48,8 +50,8 @@ namespace HLVulkan {
      * @brief Finds a supported format on the device among an ordered list of
      * candidates.
      *
-     * @param candidates An ordered list of candidate formats.
-     * @param tiling The tiling to use along the format. One of
+     * @param[in] candidates An ordered list of candidate formats.
+     * @param[in] tiling The tiling to use along the format. One of
      * VK_IMAGE_TILING_LINEAR or VK_IMAGE_TILING_OPTIMAL.
      * @param features A set of desired features for the format.
      *

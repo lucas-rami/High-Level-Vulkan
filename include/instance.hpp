@@ -14,7 +14,7 @@ namespace HLVulkan {
      * @brief Constructs a Vulkan instance. Fails if GLFW extensions required to
      * interface with the window system aren't supported.
      *
-     * @param appName The application name.
+     * @param[in] appName The application name.
      */
     Instance(const std::string &appName);
 

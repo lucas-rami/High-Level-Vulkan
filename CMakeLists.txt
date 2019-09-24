@@ -20,12 +20,14 @@ set(SOURCES ${SRC_DIR}/buffer.cpp
             ${SRC_DIR}/fence.cpp
             ${SRC_DIR}/hl_vulkan.cpp
             ${SRC_DIR}/image.cpp
+            ${SRC_DIR}/instance.cpp
             ${SRC_DIR}/pipeline_factory.cpp
             ${SRC_DIR}/pipeline_spec.cpp
             ${SRC_DIR}/render_pass_factory.cpp
             ${SRC_DIR}/render_pass_spec.cpp
             ${SRC_DIR}/shader.cpp
             ${SRC_DIR}/vertex_format.cpp
+            ${SRC_DIR}/window.cpp
 )
 
 # Build the executable

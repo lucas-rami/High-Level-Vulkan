@@ -4,6 +4,8 @@
 #include "device.hpp"
 #include "hl_vulkan.hpp"
 
+#include <optional>
+
 namespace HLVulkan {
 
     class Shader {

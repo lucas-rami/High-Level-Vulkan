@@ -1,6 +1,7 @@
 #include "buffer.hpp"
 
 #include <string.h>
+#include <optional>
 
 namespace HLVulkan {
 
