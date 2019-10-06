@@ -188,7 +188,7 @@ namespace HLVulkan {
     }
 
     // No candidate format was found with the necessary features
-    ASSERT_MSG(false, "failed to find supported format");
+    FAIL("failed to find supported format");
     return VK_FORMAT_UNDEFINED;
   }
 

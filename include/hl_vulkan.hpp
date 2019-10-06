@@ -7,32 +7,31 @@
 
 #include <vulkan/vulkan.h>
 
-#define FAIL_MSG(errStr)                                                       \
-  {                                                                            \
-    std::cout << "[FATAL]: " << errStr << " in " << __FILE__ << " at line "    \
-              << __LINE__ << std::endl;                                        \
-    assert(false);                                                             \
-  }
-
-#define ASSERT_MSG(b, errStr)                                                  \
+#define ASSERT_FAIL(b, err)                                                    \
   {                                                                            \
     if (!(b)) {                                                                \
-      std::cout << "[FATAL]: " << errStr << " in " << __FILE__ << " at line "  \
+      std::cout << "[FATAL]: " << err << " in " << __FILE__ << " at line "     \
                 << __LINE__ << std::endl;                                      \
-      assert(b);                                                               \
+      assert(false);                                                           \
     }                                                                          \
   }
 
-#define ASSERT_THROW(b, errStr)                                                \
+#define ASSERT_THROW(b, err)                                                   \
   {                                                                            \
     if (!(b)) {                                                                \
-      std::cout << "[EXCEPTION]: " << errStr << " in " << __FILE__             \
-                << " at line " << __LINE__ << std::endl;                       \
-      throw std::runtime_error(errStr);                                        \
+      std::cout << "[EXCEPTION]: " << err << " in " << __FILE__ << " at line " \
+                << __LINE__ << std::endl;                                      \
+      throw std::runtime_error(err);                                           \
     }                                                                          \
   }
 
-#define VK_CHECK_NULL(handle)                                                  \
+#define FAIL(err) ASSERT_FAIL(false, err)
+
+#define VK_THROW(res, err) ASSERT_THROW((res) == VK_SUCCESS, err)
+
+#define VK_FAIL(res, err) ASSERT_FAIL((res) == VK_SUCCESS, err)
+
+#define VK_NULL(handle)                                                        \
   {                                                                            \
     if ((handle) != VK_NULL_HANDLE) {                                          \
       std::cout << "[FATAL]: " << #handle << " isn't VK_NULL_HANDLE"           \
@@ -41,48 +40,20 @@
     }                                                                          \
   }
 
-#define VK_CHECK_NOT_NULL(handle)                                              \
+#define VK_NOT_NULL(handle)\
   {                                                                            \
     if ((handle) == VK_NULL_HANDLE) {                                          \
       std::cout << "[FATAL]: " << #handle << " is VK_NULL_HANDLE"              \
                 << " in " << __FILE__ << " at line " << __LINE__ << std::endl; \
       assert(false);                                                           \
     }                                                                          \
-  }
+  }                                                    
 
-#define VK_CHECK_FAIL(b, errStr)                                               \
-  {                                                                            \
-    VkResult res = (b);                                                        \
-    if (res != VK_SUCCESS) {                                                   \
-      std::cout << "[FATAL]: " << errStr << " in " << __FILE__ << " at line "  \
-                << __LINE__ << std::endl;                                      \
-      assert(false);                                                           \
-    }                                                                          \
-  }
-
-#define VK_THROW(b, errStr)                                                    \
-  {                                                                            \
-    VkResult res = (b);                                                        \
-    if (res != VK_SUCCESS) {                                                   \
-      std::cout << "[EXCEPTION]: " << errStr << " in " << __FILE__             \
-                << " at line " << __LINE__ << std::endl;                       \
-      throw std::runtime_error(errStr);                                        \
-    }                                                                          \
-  }
-
-#define VK_CHECK_RET(b)                                                        \
+#define VK_RET(b)                                                              \
   {                                                                            \
     VkResult res = (b);                                                        \
     if (res != VK_SUCCESS) {                                                   \
       return res;                                                              \
-    }                                                                          \
-  }
-
-#define VK_CHECK_RET_NULL(b)                                                   \
-  {                                                                            \
-    VkResult res = (b);                                                        \
-    if (res != VK_SUCCESS) {                                                   \
-      return VK_NULL_HANDLE;                                                   \
     }                                                                          \
   }
 

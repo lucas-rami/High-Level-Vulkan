@@ -43,7 +43,7 @@ namespace HLVulkan {
     // Ask GLFW for extensions to interface with the window system
     // and check for support
     std::vector<const char *> glfwExt = glfwRequiredExt();
-    ASSERT_MSG(glfwAreExtSupported(glfwExt), "glfw extensions not supported");
+    ASSERT_FAIL(glfwAreExtSupported(glfwExt), "glfw extensions not supported");
 
     // Created the instance
     VkApplicationInfo appInfo = {};

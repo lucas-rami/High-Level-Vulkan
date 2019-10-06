@@ -7,8 +7,8 @@ namespace HLVulkan {
 
   Surface::Surface(const Instance &instance, const Window &window)
       : instance(*instance) {
-    VK_CHECK_FAIL(window.createSurface(instance, surface),
-                  "failed to create surface");
+    VK_THROW(window.createSurface(instance, surface),
+            "failed to create surface");
   }
 
   Surface::Surface(Surface &&other)

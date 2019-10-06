@@ -41,26 +41,26 @@ namespace HLVulkan {
                                    VkSurfaceKHR surface, SCSupport &support) {
 
     // Get surface's capabilities
-    VK_CHECK_RET(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-        device, surface, &support.capabilities));
+    VK_RET(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface,
+                                                     &support.capabilities));
 
     // Get supported surface formats
     uint32_t formatCount;
-    VK_CHECK_RET(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface,
-                                                      &formatCount, nullptr));
+    VK_RET(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount,
+                                                nullptr));
     if (formatCount != 0) {
       support.formats.resize(formatCount);
-      VK_CHECK_RET(vkGetPhysicalDeviceSurfaceFormatsKHR(
-          device, surface, &formatCount, support.formats.data()));
+      VK_RET(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount,
+                                                  support.formats.data()));
     }
 
     // Get supported presentation modes
     uint32_t presentModeCount;
-    VK_CHECK_RET(vkGetPhysicalDeviceSurfacePresentModesKHR(
+    VK_RET(vkGetPhysicalDeviceSurfacePresentModesKHR(
         device, surface, &presentModeCount, nullptr));
     if (presentModeCount != 0) {
       support.presentModes.resize(presentModeCount);
-      VK_CHECK_RET(vkGetPhysicalDeviceSurfacePresentModesKHR(
+      VK_RET(vkGetPhysicalDeviceSurfacePresentModesKHR(
           device, surface, &presentModeCount, support.presentModes.data()));
     }
 

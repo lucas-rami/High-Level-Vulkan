@@ -95,8 +95,8 @@ namespace HLVulkan {
       for (const auto &family : queueFamilies) {
         if (family.queueCount > 0) {
           VkBool32 support = false;
-          VK_CHECK_RET(vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface,
-                                                            &support));
+          VK_RET(vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface,
+                                                      &support));
           if (support) {
             res.presentFamily = i;
             break;
