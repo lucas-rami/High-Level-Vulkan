@@ -9,6 +9,20 @@ namespace HLVulkan {
         glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
   }
 
+  Window::Window(Window &&other) : window(other.window) {
+    other.window = nullptr;
+  }
+
+  Window &Window::operator=(Window &&other) {
+    // Self-assignment detection
+    if (&other != this) {
+      window = other.window;
+
+      other.window = nullptr;
+    }
+    return *this;
+  }
+
   void Window::setResizeCallback(GLFWframebuffersizefun callback) const {
     glfwSetFramebufferSizeCallback(window, callback);
   }
@@ -23,8 +37,10 @@ namespace HLVulkan {
   }
 
   Window::~Window() {
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    if (window != nullptr) {
+      glfwDestroyWindow(window);
+      glfwTerminate();
+    }
   }
 
 } // namespace HLVulkan

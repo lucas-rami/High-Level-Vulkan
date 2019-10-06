@@ -13,14 +13,33 @@ namespace HLVulkan {
    */
   class Surface {
   public:
-
     /**
      * @brief Creates a VkSurfaceKHR associated with an instance and window.
-     * 
+     *
      * @param[in] instance The associated instance.
      * @param[in] window The associated GLFW window.
      */
     Surface(const Instance &instance, const Window &window);
+
+    /**
+     * @brief Deleted copy-constructor.
+     */
+    Surface(Surface &other) = delete;
+
+    /**
+     * @brief Deleted copy-assignment operator.
+     */
+    Surface &operator=(Surface &other) = delete;
+
+    /**
+     * @brief Move-constructor.
+     */
+    Surface(Surface &&other);
+
+    /**
+     * @brief Move-assignment operator.
+     */
+    Surface &operator=(Surface &&other);
 
     /**
      * @brief Returns the packaged VkSurfaceKHR.
@@ -29,7 +48,7 @@ namespace HLVulkan {
 
     /**
      * @brief Destroys the created surface.
-    */
+     */
     virtual ~Surface();
 
   private:

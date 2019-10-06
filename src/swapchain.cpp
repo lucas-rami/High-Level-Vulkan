@@ -13,13 +13,11 @@ namespace HLVulkan {
 
   SCSupport &SCSupport::operator=(const SCSupport &other) {
     // Self-assignment detection
-    if (&other == this) {
-      return *this;
+    if (&other != this) {
+      capabilities = other.capabilities;
+      formats = other.formats;
+      presentModes = other.presentModes;
     }
-
-    capabilities = other.capabilities;
-    formats = other.formats;
-    presentModes = other.presentModes;
     return *this;
   }
 
@@ -29,13 +27,11 @@ namespace HLVulkan {
 
   SCSupport &SCSupport::operator=(const SCSupport &&other) {
     // Self-assignment detection
-    if (&other == this) {
-      return *this;
+    if (&other != this) {
+      capabilities = other.capabilities;
+      formats = std::move(other.formats);
+      presentModes = std::move(other.presentModes);
     }
-
-    capabilities = other.capabilities;
-    formats = std::move(other.formats);
-    presentModes = std::move(other.presentModes);
     return *this;
   }
 

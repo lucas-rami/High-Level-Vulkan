@@ -20,6 +20,26 @@ namespace HLVulkan {
     Instance(const std::string &appName);
 
     /**
+     * @brief Deleted copy-constructor.
+     */
+    Instance(Instance &other) = delete;
+
+    /**
+     * @brief Deleted copy-assignment operator.
+     */
+    Instance &operator=(Instance &other) = delete;
+
+    /**
+     * @brief Move-constructor.
+     */
+    Instance(Instance &&other);
+
+    /**
+     * @brief Move-assignment operator.
+     */
+    Instance &operator=(Instance &&other);
+
+    /**
      * @brief Returns the packaged VkInstance.
      */
     VkInstance operator*() const;

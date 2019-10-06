@@ -26,6 +26,26 @@ namespace HLVulkan {
     Window(const std::string &windowName, int width, int height);
 
     /**
+     * @brief Deleted copy-constructor.
+     */
+    Window(Window &other) = delete;
+
+    /**
+     * @brief Deleted copy-assignment operator.
+     */
+    Window &operator=(Window &other) = delete;
+
+    /**
+     * @brief Move-constructor.
+     */
+    Window(Window &&other);
+
+    /**
+     * @brief Move-assignment operator.
+     */
+    Window &operator=(Window &&other);
+
+    /**
      * @brief Sets/Overwrites the GLFW resize callback.
      *
      * @param[in] callback The new callback.

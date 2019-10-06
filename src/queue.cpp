@@ -13,12 +13,10 @@ namespace HLVulkan {
 
   QueueResult &QueueResult::operator=(const QueueResult &other) {
     // Self-assignment detection
-    if (&other == this) {
-      return *this;
+    if (&other != this) {
+      families = other.families;
+      presentFamily = other.presentFamily;
     }
-
-    families = other.families;
-    presentFamily = other.presentFamily;
     return *this;
   }
 
@@ -28,12 +26,10 @@ namespace HLVulkan {
 
   QueueResult &QueueResult::operator=(const QueueResult &&other) {
     // Self-assignment detection
-    if (&other == this) {
-      return *this;
+    if (&other != this) {
+      families = std::move(other.families);
+      presentFamily = std::move(other.presentFamily);
     }
-
-    families = std::move(other.families);
-    presentFamily = std::move(other.presentFamily);
     return *this;
   }
 
@@ -48,12 +44,10 @@ namespace HLVulkan {
 
   QueueRequest &QueueRequest::operator=(const QueueRequest &other) {
     // Self-assignment detection
-    if (&other == this) {
-      return *this;
+    if (&other != this) {
+      properties = other.properties;
+      presentSupport = other.presentSupport;
     }
-
-    properties = other.properties;
-    presentSupport = other.presentSupport;
     return *this;
   }
 
@@ -63,12 +57,10 @@ namespace HLVulkan {
 
   QueueRequest &QueueRequest::operator=(const QueueRequest &&other) {
     // Self-assignment detection
-    if (&other == this) {
-      return *this;
+    if (&other != this) {
+      properties = std::move(other.properties);
+      presentSupport = other.presentSupport;
     }
-
-    properties = std::move(other.properties);
-    presentSupport = other.presentSupport;
     return *this;
   }
 

@@ -137,17 +137,15 @@ namespace HLVulkan {
 
   Device &Device::operator=(Device &&other) {
     // Self-assignment detection
-    if (&other == this) {
-      return *this;
+    if (&other != this) {
+      physical = other.physical;
+      logical = other.logical;
+      scSupport = std::move(other.scSupport);
+      queueHandles = std::move(other.queueHandles);
+      presentHandle = presentHandle;
+
+      other.logical = VK_NULL_HANDLE;
     }
-
-    physical = other.physical;
-    logical = other.logical;
-    scSupport = std::move(other.scSupport);
-    queueHandles = std::move(other.queueHandles);
-    presentHandle = presentHandle;
-
-    other.logical = VK_NULL_HANDLE;
     return *this;
   }
 

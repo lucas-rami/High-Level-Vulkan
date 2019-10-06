@@ -61,12 +61,29 @@ namespace HLVulkan {
     createInfo.ppEnabledExtensionNames = glfwExt.data();
 
     // Create the Vulkan instance and fill in &instance
-    VK_CHECK_FAIL(vkCreateInstance(&createInfo, nullptr, &instance),
-                  "failed to create instance");
+    VK_THROW(vkCreateInstance(&createInfo, nullptr, &instance),
+             "failed to create instance");
+  }
+
+  Instance::Instance(Instance &&other) : instance(other.instance) {
+    other.instance = VK_NULL_HANDLE;
+  }
+
+  Instance &Instance::operator=(Instance &&other) {
+    // Self-assignment detection
+    if (&other != this) {
+      instance = other.instance;
+      other.instance = VK_NULL_HANDLE;
+    }
+    return *this;
   }
 
   VkInstance Instance::operator*() const { return instance; }
 
-  Instance::~Instance() { vkDestroyInstance(instance, nullptr); }
+  Instance::~Instance() {
+    if (instance != VK_NULL_HANDLE) {
+      vkDestroyInstance(instance, nullptr);
+    }
+  }
 
 } // namespace HLVulkan
