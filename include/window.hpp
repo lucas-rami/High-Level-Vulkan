@@ -41,15 +41,16 @@ namespace HLVulkan {
 
     /**
      * @brief Creates a Vulkan surface to render to.
-     * 
+     *
      * @param[in] instance The Vulkan instance that will be associated with the
      * surface.
      * @param[out] surface A Vulkan surface. On success, it is filled with a
      * valid handle to a VkSurface.
-     * 
+     *
      * @return VK_SUCCESS on success, a Vulkan error code otherwise.
      */
-    VkResult createSurface(const Instance &instance, VkSurfaceKHR &surface) const;
+    VkResult createSurface(const Instance &instance,
+                           VkSurfaceKHR &surface) const;
 
     /**
      * @brief Destroys the created window. Terminates the GLFW context.

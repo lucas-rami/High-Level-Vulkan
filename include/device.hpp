@@ -2,36 +2,63 @@
 #define __HL_VULKAN_DEVICE_HPP__
 
 #include "hl_vulkan.hpp"
+#include "instance.hpp"
+#include "queue.hpp"
+#include "surface.hpp"
+#include "swapchain.hpp"
 
+// Error code indicating that no suitable memory type could be found in the
+// device.
 #define NO_SUITABLE_MEMORY_TYPE 255
 
 namespace HLVulkan {
 
+  typedef std::pair<VkFlags, VkQueue> QueueHandle;
+
   /**
-   * @brief Packages a VkPhysicalDevice together with a VkDevice.
+   * @brief Represents a Vulkan-usable logical device. It also holds queue 
+   * handles for the device. 
    */
   class Device {
   public:
-    // The physical device
-    const VkPhysicalDevice physical;
-    // The logical device
-    const VkDevice logical;
+    /**
+     * @brief Creates a logical device to be used by Vulkan.
+     *
+     * The created device is compliant with the passed QueueRequest object, i.e. 
+     * its retrieved queues have the capabilities defined in the request. 
+     *
+     * @param[in] instance A Vulkan instance (used to query for physical
+     * devices).
+     * @param[in] surface The surface to render to (used to query for swapchain
+     * and queue support).
+     * @param[in] req Defines which kind of queues we wish to retrieve from the
+     * device.
+     *
+     * @throw std::runtime_error If for some reason a suitable device could not
+     * be created.
+     */
+    Device(const Instance &instance, const Surface &surface,
+           const QueueRequest &req);
 
     /**
-     * @brief Creates a Device instance from a VkPhysicalDevice and a VkDevice.
-     * The logical device must have been created from the physical one.
-     *
-     * @param[in] physicalDevice A physical device.
-     * @param[in] device A logical device.
+     * @brief Deleted copy-constructor.
      */
-    Device(VkPhysicalDevice physicalDevice, VkDevice device);
+    Device(Device &other) = delete;
 
     /**
-     * @brief Straightforward copy constructor (shallow copies all fields).
-     *
-     * @param[in] device The device to copy.
+     * @brief Deleted copy-assignment operator.
      */
-    Device(const Device &device);
+    Device &operator=(Device &other) = delete;
+
+    /**
+     * @brief Move-constructor.
+     */
+    Device(Device &&other);
+
+    /**
+     * @brief Move-assignment operator.
+     */
+    Device &operator=(Device &&other);
 
     /**
      * @brief Finds a suitable memory type on the device given a bitmask of
@@ -72,8 +99,21 @@ namespace HLVulkan {
      * @return See findSupportedFormat().
      */
     VkFormat findDepthFormat() const;
-  };
 
+    ~Device();
+
+  private:
+    // The physical device
+    VkPhysicalDevice physical = VK_NULL_HANDLE;
+    // The logical device
+    VkDevice logical = VK_NULL_HANDLE;
+    // Defines the swapchain support for the device
+    SCSupport scSupport;
+    // Queue handles (except presentation)
+    std::vector<QueueHandle> queueHandles;
+    // Presentation queue handle
+    VkQueue presentHandle = VK_NULL_HANDLE;
+  };
 } // namespace HLVulkan
 
 #endif //__HL_VULKAN_DEVICE_HPP__
