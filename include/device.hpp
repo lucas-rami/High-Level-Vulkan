@@ -13,8 +13,6 @@
 
 namespace HLVulkan {
 
-  typedef std::pair<VkFlags, VkQueue> QueueHandle;
-
   /**
    * @brief Represents a Vulkan-usable logical device. It also holds queue 
    * handles for the device. 
@@ -37,7 +35,7 @@ namespace HLVulkan {
      * @throw std::runtime_error If for some reason a suitable device could not
      * be created.
      */
-    Device(const Instance &instance, const Surface &surface,
+    Device(Instance &&instance, Surface &&surface,
            const QueueRequest &req);
 
     /**
@@ -59,6 +57,12 @@ namespace HLVulkan {
      * @brief Move-assignment operator.
      */
     Device &operator=(Device &&other);
+
+    SCSupport getSwapchainSupport() const;
+
+    std::optional<uint32_t> getQueueFamily(VkFlags flags) const;
+
+    std::optional<uint32_t> getPresentQueueFamily() const;
 
     /**
      * @brief Finds a suitable memory type on the device given a bitmask of
@@ -103,16 +107,22 @@ namespace HLVulkan {
     ~Device();
 
   private:
+    // An instance
+    Instance instance;
+    // A surface
+    Surface surface;
     // The physical device
     VkPhysicalDevice physical = VK_NULL_HANDLE;
     // The logical device
     VkDevice logical = VK_NULL_HANDLE;
     // Defines the swapchain support for the device
     SCSupport scSupport;
+    // Queues description
+    QueueResult queuesDesc;
     // Queue handles (except presentation)
-    std::vector<QueueHandle> queueHandles;
+    std::vector<VkQueue> queues;
     // Presentation queue handle
-    VkQueue presentHandle = VK_NULL_HANDLE;
+    VkQueue presentQueue = VK_NULL_HANDLE;
   };
 } // namespace HLVulkan
 

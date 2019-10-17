@@ -31,10 +31,7 @@ namespace HLVulkan {
     glfwSetWindowUserPointer(window, userPtr);
   }
 
-  VkResult Window::createSurface(const Instance &instance,
-                                 VkSurfaceKHR &surface) const {
-    return glfwCreateWindowSurface(*instance, window, nullptr, &surface);
-  }
+  GLFWwindow *Window::operator*() const { return window; }
 
   Window::~Window() {
     if (window != nullptr) {

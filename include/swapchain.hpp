@@ -1,13 +1,12 @@
 #ifndef __HL_VULKAN_SWAPCHAIN_HPP__
 #define __HL_VULKAN_SWAPCHAIN_HPP__
 
-#include <vector>
-#include <vulkan/vulkan.h>
+#include "device.hpp"
 
 namespace HLVulkan {
 
   /**
-   * @brief Aggregates all information about the swapchain support for a 
+   * @brief Aggregates all information about the swapchain support for a
    * physical device.
    */
   struct SCSupport {
@@ -45,9 +44,24 @@ namespace HLVulkan {
   class SwapChain {
 
   public:
+    SwapChain(const Device &device, const Surface &surface);
 
     static VkResult querySupport(VkPhysicalDevice device, VkSurfaceKHR surface,
                                  SCSupport &support);
+
+  private:
+    // The swapchain handle
+    VkSwapchainKHR swapchain = VK_NULL_HANDLE;
+    // Surface format
+    VkSurfaceFormatKHR surfaceFormat;
+    // Presentation mode
+    VkPresentModeKHR presentMode;
+    // Swapchain extent
+    VkExtent2D extent;
+    // Owned images
+    std::vector<VkImage> images;
+    // Owned image views
+    std::vector<VkImageView> views;
   };
 
 } // namespace HLVulkan

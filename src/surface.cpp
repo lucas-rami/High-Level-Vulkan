@@ -5,25 +5,25 @@
 
 namespace HLVulkan {
 
-  Surface::Surface(const Instance &instance, const Window &window)
-      : instance(*instance) {
-    VK_THROW(window.createSurface(instance, surface),
-            "failed to create surface");
+  Surface::Surface(Instance &&instance, Window &&window)
+      : instance(std::move(instance)), window(std::move(window)) {
+    VK_THROW(glfwCreateWindowSurface(*instance, *window, nullptr, &surface),
+             "failed to create surface");
   }
 
   Surface::Surface(Surface &&other)
-      : instance(other.instance), surface(other.surface) {
-    other.instance = VK_NULL_HANDLE;
+      : instance(std::move(other.instance)), window(std::move(other.window)),
+        surface(other.surface) {
     other.surface = VK_NULL_HANDLE;
   }
 
   Surface &Surface::operator=(Surface &&other) {
     // Self-assignment detection
     if (&other != this) {
-      instance = other.instance;
+      instance = std::move(other.instance);
+      window = std::move(other.window);
       surface = other.surface;
 
-      other.instance = VK_NULL_HANDLE;
       other.surface = VK_NULL_HANDLE;
     }
     return *this;
@@ -32,8 +32,8 @@ namespace HLVulkan {
   VkSurfaceKHR Surface::operator*() const { return surface; }
 
   Surface::~Surface() {
-    if (instance != VK_NULL_HANDLE && surface != VK_NULL_HANDLE) {
-      vkDestroySurfaceKHR(instance, surface, nullptr);
+    if (surface != VK_NULL_HANDLE) {
+      vkDestroySurfaceKHR(*instance, surface, nullptr);
     }
   }
 

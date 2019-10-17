@@ -60,17 +60,9 @@ namespace HLVulkan {
     void setUserPointer(void *userPtr) const;
 
     /**
-     * @brief Creates a Vulkan surface to render to.
-     *
-     * @param[in] instance The Vulkan instance that will be associated with the
-     * surface.
-     * @param[out] surface A Vulkan surface. On success, it is filled with a
-     * valid handle to a VkSurface.
-     *
-     * @return VK_SUCCESS on success, a Vulkan error code otherwise.
+     * @brief Returns a pointer to the packaged GLFWwindow.
      */
-    VkResult createSurface(const Instance &instance,
-                           VkSurfaceKHR &surface) const;
+    GLFWwindow *operator*() const;
 
     /**
      * @brief Destroys the created window. Terminates the GLFW context.

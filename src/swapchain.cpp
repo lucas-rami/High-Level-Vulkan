@@ -37,6 +37,78 @@ namespace HLVulkan {
 
   // ********** SwapChain **********
 
+  VkSurfaceFormatKHR
+  chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &candidates) {
+
+    // Surface has no preferred format (we are free to choose)
+    if (candidates.size() == 1 && candidates[0].format == VK_FORMAT_UNDEFINED) {
+      return {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+    }
+
+    // Select preferred format if it is available
+    for (const auto &format : candidates) {
+      if (format.format == VK_FORMAT_B8G8R8A8_UNORM &&
+          format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+        return format;
+      }
+    }
+
+    // Otherwise take first proposed format
+    return candidates[0];
+  }
+
+  VkPresentModeKHR
+  choosePresentMode(const std::vector<VkPresentModeKHR> candidates) {
+    // Vertical sync (double buffering)
+    auto bestMode = VK_PRESENT_MODE_FIFO_KHR;
+
+    for (const auto &availablePresentMode : candidates) {
+      if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
+        // Triple buffering
+        return availablePresentMode;
+      } else if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+        // No buffering
+        bestMode = availablePresentMode;
+      }
+    }
+
+    // VK_PRESENT_MODE_MAILBOX_KHR > VK_PRESENT_MODE_IMMEDIATE_KHR >
+    // VK_PRESENT_MODE_FIFO_KHR
+    return bestMode;
+  }
+
+  VkExtent2D chooseExtent(const VkSurfaceCapabilitiesKHR &capabilities) {
+    if (capabilities.currentExtent.width !=
+        std::numeric_limits<uint32_t>::max()) {
+      return capabilities.currentExtent;
+    } else {
+      int width, height;
+      glfwGetFramebufferSize(window, &width, &height);
+
+      VkExtent2D actualExtent = {static_cast<uint32_t>(width),
+                                 static_cast<uint32_t>(height)};
+
+      actualExtent.width = std::max(
+          capabilities.minImageExtent.width,
+          std::min(capabilities.maxImageExtent.width, actualExtent.width));
+      actualExtent.height = std::max(
+          capabilities.minImageExtent.height,
+          std::min(capabilities.maxImageExtent.height, actualExtent.height));
+
+      return actualExtent;
+    }
+  }
+
+  SwapChain::SwapChain(const Device &device, const Surface &surface) {
+
+    // Choose swapchain characteristics
+    SCSupport deviceSupport = device.getSwapchainSupport();
+    surfaceFormat = chooseSurfaceFormat(deviceSupport.formats);
+    presentMode = choosePresentMode(deviceSupport.presentModes);
+    extent = chooseExtent(deviceSupport.capabilities);
+    
+  }
+
   VkResult SwapChain::querySupport(VkPhysicalDevice device,
                                    VkSurfaceKHR surface, SCSupport &support) {
 

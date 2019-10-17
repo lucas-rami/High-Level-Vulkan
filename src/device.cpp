@@ -31,8 +31,9 @@ namespace HLVulkan {
     return requiredExtensions.empty();
   }
 
-  Device::Device(const Instance &instance, const Surface &surface,
-                 const QueueRequest &req) {
+  Device::Device(Instance &&instance, Surface &&surface,
+                 const QueueRequest &req)
+      : instance(std::move(instance)), surface(std::move(surface)) {
 
     // ***** Pick a physical device *****
 
@@ -50,12 +51,11 @@ namespace HLVulkan {
     std::vector<const char *> reqExt{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
     // Select a physical device
-    QueueResult res;
     for (const auto &phyDev : phyDevs) {
 
       // Reset structures
       scSupport = SCSupport();
-      res = QueueResult();
+      queuesDesc = QueueResult();
 
       // Check for extension support
       if (!areDevExtSupported(phyDev, reqExt)) {
@@ -66,10 +66,10 @@ namespace HLVulkan {
         continue;
       }
       // Check for queue support
-      if (req.process(phyDev, *surface, res) != VK_SUCCESS) {
+      if (req.process(phyDev, *surface, queuesDesc) != VK_SUCCESS) {
         continue;
       }
-      if (req.satisfied(res)) {
+      if (req.satisfied(queuesDesc)) {
         physical = phyDev;
         break;
       }
@@ -81,11 +81,11 @@ namespace HLVulkan {
 
     // Get set of queue families
     std::set<uint32_t> uniqueQueueFams = {};
-    for (const auto &fam : res.families) {
+    for (const auto &fam : queuesDesc.families) {
       uniqueQueueFams.insert(fam.second);
     }
-    if (res.presentFamily.has_value()) {
-      uniqueQueueFams.insert(*res.presentFamily);
+    if (queuesDesc.presentFamily.has_value()) {
+      uniqueQueueFams.insert(*queuesDesc.presentFamily);
     }
 
     // Create one DeviceQueueInfo per queue family
@@ -116,37 +116,53 @@ namespace HLVulkan {
 
     // ***** Retrieve queue handles *****
 
-    for (const auto &fam : res.families) {
+    for (const auto &fam : queuesDesc.families) {
       VkQueue queue;
       vkGetDeviceQueue(logical, fam.second, 0, &queue);
-      queueHandles.push_back({fam.first, queue});
+      queues.push_back(queue);
     }
-    VkQueue presentHandle = VK_NULL_HANDLE;
-    if (res.presentFamily.has_value()) {
-      vkGetDeviceQueue(logical, *res.presentFamily, 0, &presentHandle);
+    if (queuesDesc.presentFamily.has_value()) {
+      vkGetDeviceQueue(logical, *queuesDesc.presentFamily, 0, &presentQueue);
     }
   }
 
   Device::Device(Device &&other)
-      : physical(other.physical), logical(other.logical),
-        scSupport(std::move(other.scSupport)),
-        queueHandles(std::move(other.queueHandles)),
-        presentHandle(other.presentHandle) {
+      : instance(std::move(other.instance)), surface(std::move(other.surface)),
+        physical(other.physical), logical(other.logical),
+        scSupport(std::move(other.scSupport)), queues(std::move(other.queues)),
+        presentQueue(other.presentQueue) {
     other.logical = VK_NULL_HANDLE;
   }
 
   Device &Device::operator=(Device &&other) {
     // Self-assignment detection
     if (&other != this) {
+      instance = std::move(instance);
+      surface = std::move(surface);
       physical = other.physical;
       logical = other.logical;
       scSupport = std::move(other.scSupport);
-      queueHandles = std::move(other.queueHandles);
-      presentHandle = presentHandle;
+      queues = std::move(other.queues);
+      presentQueue = presentQueue;
 
       other.logical = VK_NULL_HANDLE;
     }
     return *this;
+  }
+
+  SCSupport Device::getSwapchainSupport() const { return scSupport; }
+
+  std::optional<uint32_t> Device::getQueueFamily(VkFlags flags) const {
+    for (const auto &family : queuesDesc.families) {
+      if (family.first & flags == flags) {
+        return family.second;
+      }
+    }
+    return {};
+  }
+
+  std::optional<uint32_t> Device::getPresentQueueFamily() const {
+    return queuesDesc.presentFamily;
   }
 
   uint32_t Device::findMemoryType(uint32_t typeFilter,
