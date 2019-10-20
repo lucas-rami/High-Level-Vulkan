@@ -1,5 +1,4 @@
 #include "device.hpp"
-#include "swapchain.hpp"
 
 #include <set>
 #include <string>
@@ -31,21 +30,20 @@ namespace HLVulkan {
     return requiredExtensions.empty();
   }
 
-  Device::Device(Instance &&instance, Surface &&surface,
-                 const QueueRequest &req)
-      : instance(std::move(instance)), surface(std::move(surface)) {
+  Device::Device(const Surface &surface, const QueueRequest &req) {
+
+    auto instance = surface.getInstance();
 
     // ***** Pick a physical device *****
 
     // Get list of compatible physical devices
     uint32_t phyDevCount = 0;
-    VK_THROW(vkEnumeratePhysicalDevices(*instance, &phyDevCount, nullptr),
+    VK_THROW(vkEnumeratePhysicalDevices(instance, &phyDevCount, nullptr),
              "failed to get list of physical devices");
     ASSERT_THROW(phyDevCount != 0, "failed to find GPUs with Vulkan support");
     std::vector<VkPhysicalDevice> phyDevs(phyDevCount);
-    VK_THROW(
-        vkEnumeratePhysicalDevices(*instance, &phyDevCount, phyDevs.data()),
-        "failed to get list of physical devices");
+    VK_THROW(vkEnumeratePhysicalDevices(instance, &phyDevCount, phyDevs.data()),
+             "failed to get list of physical devices");
 
     // List of required extensions
     std::vector<const char *> reqExt{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
@@ -62,7 +60,7 @@ namespace HLVulkan {
         continue;
       }
       // Check for swapchain support
-      if (SwapChain::querySupport(phyDev, *surface, scSupport) != VK_SUCCESS) {
+      if (scSupport.querySupport(phyDev, *surface) != VK_SUCCESS) {
         continue;
       }
       // Check for queue support
@@ -127,8 +125,7 @@ namespace HLVulkan {
   }
 
   Device::Device(Device &&other)
-      : instance(std::move(other.instance)), surface(std::move(other.surface)),
-        physical(other.physical), logical(other.logical),
+      : physical(other.physical), logical(other.logical),
         scSupport(std::move(other.scSupport)), queues(std::move(other.queues)),
         presentQueue(other.presentQueue) {
     other.logical = VK_NULL_HANDLE;
@@ -137,8 +134,6 @@ namespace HLVulkan {
   Device &Device::operator=(Device &&other) {
     // Self-assignment detection
     if (&other != this) {
-      instance = std::move(instance);
-      surface = std::move(surface);
       physical = other.physical;
       logical = other.logical;
       scSupport = std::move(other.scSupport);
@@ -215,6 +210,8 @@ namespace HLVulkan {
                                VK_IMAGE_TILING_OPTIMAL,
                                VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
   }
+
+  VkDevice Device::operator*() const { return logical; }
 
   Device::~Device() {
     if (logical != VK_NULL_HANDLE) {

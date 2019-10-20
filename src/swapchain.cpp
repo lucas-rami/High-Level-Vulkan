@@ -1,41 +1,8 @@
 #include "swapchain.hpp"
 #include "hl_vulkan.hpp"
+#include "image.hpp"
 
 namespace HLVulkan {
-
-  // ********** SCSupport **********
-
-  SCSupport::SCSupport() : capabilities(), formats(), presentModes() {}
-
-  SCSupport::SCSupport(const SCSupport &other)
-      : capabilities(other.capabilities), formats(other.formats),
-        presentModes(other.presentModes) {}
-
-  SCSupport &SCSupport::operator=(const SCSupport &other) {
-    // Self-assignment detection
-    if (&other != this) {
-      capabilities = other.capabilities;
-      formats = other.formats;
-      presentModes = other.presentModes;
-    }
-    return *this;
-  }
-
-  SCSupport::SCSupport(const SCSupport &&other)
-      : capabilities(capabilities), formats(std::move(other.formats)),
-        presentModes(std::move(other.presentModes)) {}
-
-  SCSupport &SCSupport::operator=(const SCSupport &&other) {
-    // Self-assignment detection
-    if (&other != this) {
-      capabilities = other.capabilities;
-      formats = std::move(other.formats);
-      presentModes = std::move(other.presentModes);
-    }
-    return *this;
-  }
-
-  // ********** SwapChain **********
 
   VkSurfaceFormatKHR
   chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &candidates) {
@@ -58,7 +25,7 @@ namespace HLVulkan {
   }
 
   VkPresentModeKHR
-  choosePresentMode(const std::vector<VkPresentModeKHR> candidates) {
+  choosePresentMode(const std::vector<VkPresentModeKHR> &candidates) {
     // Vertical sync (double buffering)
     auto bestMode = VK_PRESENT_MODE_FIFO_KHR;
 
@@ -77,7 +44,8 @@ namespace HLVulkan {
     return bestMode;
   }
 
-  VkExtent2D chooseExtent(const VkSurfaceCapabilitiesKHR &capabilities) {
+  VkExtent2D chooseExtent(GLFWwindow *window,
+                          const VkSurfaceCapabilitiesKHR &capabilities) {
     if (capabilities.currentExtent.width !=
         std::numeric_limits<uint32_t>::max()) {
       return capabilities.currentExtent;
@@ -99,44 +67,70 @@ namespace HLVulkan {
     }
   }
 
-  SwapChain::SwapChain(const Device &device, const Surface &surface) {
+  SwapChain::SwapChain(const Surface &surface, const Device &device) {
 
     // Choose swapchain characteristics
     SCSupport deviceSupport = device.getSwapchainSupport();
     surfaceFormat = chooseSurfaceFormat(deviceSupport.formats);
     presentMode = choosePresentMode(deviceSupport.presentModes);
-    extent = chooseExtent(deviceSupport.capabilities);
-    
-  }
+    extent = chooseExtent(surface.getWindow(), deviceSupport.capabilities);
 
-  VkResult SwapChain::querySupport(VkPhysicalDevice device,
-                                   VkSurfaceKHR surface, SCSupport &support) {
-
-    // Get surface's capabilities
-    VK_RET(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface,
-                                                     &support.capabilities));
-
-    // Get supported surface formats
-    uint32_t formatCount;
-    VK_RET(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount,
-                                                nullptr));
-    if (formatCount != 0) {
-      support.formats.resize(formatCount);
-      VK_RET(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount,
-                                                  support.formats.data()));
+    // Decide on the number of images in the swapchain
+    uint32_t imageCount = deviceSupport.capabilities.minImageCount + 1;
+    if (deviceSupport.capabilities.maxImageCount > 0 &&
+        imageCount > deviceSupport.capabilities.maxImageCount) {
+      imageCount = deviceSupport.capabilities.maxImageCount;
     }
 
-    // Get supported presentation modes
-    uint32_t presentModeCount;
-    VK_RET(vkGetPhysicalDeviceSurfacePresentModesKHR(
-        device, surface, &presentModeCount, nullptr));
-    if (presentModeCount != 0) {
-      support.presentModes.resize(presentModeCount);
-      VK_RET(vkGetPhysicalDeviceSurfacePresentModesKHR(
-          device, surface, &presentModeCount, support.presentModes.data()));
-    }
+    // Get queue families
+    uint32_t queueFamilyIndices[2];
+    auto graphics = device.getQueueFamily(VK_QUEUE_GRAPHICS_BIT);
+    auto present = device.getPresentQueueFamily();
+    ASSERT_THROW(graphics.has_value() && present.has_value(),
+                 "device doesn't have a graphics or present queue");
+    queueFamilyIndices[0] = *graphics;
+    queueFamilyIndices[1] = *present;
 
-    return VK_SUCCESS;
+    // Create structures for vkCreateSwapchainKHR()
+    VkSwapchainCreateInfoKHR createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    createInfo.surface = *surface;
+    createInfo.minImageCount = imageCount;
+    createInfo.imageFormat = surfaceFormat.format;
+    createInfo.imageColorSpace = surfaceFormat.colorSpace;
+    createInfo.imageExtent = extent;
+    createInfo.imageArrayLayers = 1;
+    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    if (*graphics != *present) {
+      createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT; // Best perf
+      createInfo.queueFamilyIndexCount = 2;
+      createInfo.pQueueFamilyIndices = queueFamilyIndices;
+    } else {
+      createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE; // Worst perf
+    }
+    createInfo.preTransform = deviceSupport.capabilities.currentTransform;
+    createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    createInfo.presentMode = presentMode;
+    createInfo.clipped = VK_TRUE;
+    createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+    // Create the swapchain and fill in &swapChain
+    VK_THROW(vkCreateSwapchainKHR(*device, &createInfo, nullptr, &swapchain),
+             "failed to create swapchain");
+
+    // Retrieve the swapchain's images
+    uint32_t count;
+    vkGetSwapchainImagesKHR(*device, swapchain, &count, nullptr);
+    images.resize(count);
+    vkGetSwapchainImagesKHR(*device, swapchain, &count, images.data());
+
+    // Retrieve the swapchain's image views
+    views.resize(count);
+    for (size_t i = 0; i < count; ++i) {
+      VK_THROW(Image::createImageView(*device, images[i], surfaceFormat.format,
+                                      VK_IMAGE_ASPECT_COLOR_BIT, views[i]),
+               "failed to create image view");
+    }
   }
 
 } // namespace HLVulkan

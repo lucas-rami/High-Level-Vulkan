@@ -5,49 +5,10 @@
 
 namespace HLVulkan {
 
-  /**
-   * @brief Aggregates all information about the swapchain support for a
-   * physical device.
-   */
-  struct SCSupport {
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> presentModes;
-
-    /**
-     * @brief Creates an empty swapchain support. Typically, an empty swapchain
-     * support would be passed to the SwapChain.querySupport() method.
-     */
-    SCSupport();
-
-    /**
-     * @brief Copy-constructor.
-     */
-    SCSupport(const SCSupport &other);
-
-    /**
-     * @brief Copy-assignment operator.
-     */
-    SCSupport &operator=(const SCSupport &other);
-
-    /**
-     * @brief Move-constructor.
-     */
-    SCSupport(const SCSupport &&other);
-
-    /**
-     * @brief Move-assignment operator.
-     */
-    SCSupport &operator=(const SCSupport &&other);
-  };
-
   class SwapChain {
 
   public:
-    SwapChain(const Device &device, const Surface &surface);
-
-    static VkResult querySupport(VkPhysicalDevice device, VkSurfaceKHR surface,
-                                 SCSupport &support);
+    SwapChain(const Surface &surface, const Device &device);
 
   private:
     // The swapchain handle

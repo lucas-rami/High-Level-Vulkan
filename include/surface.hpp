@@ -36,14 +36,24 @@ namespace HLVulkan {
      */
     Surface(Surface &&other);
 
-    Instance& getInstance();
-
-    Window& getWindow();
-
     /**
      * @brief Move-assignment operator.
      */
     Surface &operator=(Surface &&other);
+
+    /**
+     * @brief Retunrs the Vulkan instance associated to the surface.
+     *
+     * @return The associated Vulkan instance.
+     */
+    VkInstance getInstance() const;
+
+    /**
+     * @brief Retunrs a pointer to the GLFW window associated to the surface.
+     *
+     * @return A pointer to the associated GLFW window.
+     */
+    GLFWwindow *getWindow() const;
 
     /**
      * @brief Returns the packaged VkSurfaceKHR.

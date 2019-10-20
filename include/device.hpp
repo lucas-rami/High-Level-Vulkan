@@ -5,7 +5,7 @@
 #include "instance.hpp"
 #include "queue.hpp"
 #include "surface.hpp"
-#include "swapchain.hpp"
+#include "sc_support.hpp"
 
 // Error code indicating that no suitable memory type could be found in the
 // device.
@@ -14,19 +14,17 @@
 namespace HLVulkan {
 
   /**
-   * @brief Represents a Vulkan-usable logical device. It also holds queue 
-   * handles for the device. 
+   * @brief Represents a Vulkan-usable logical device. It also holds queue
+   * handles for the device.
    */
   class Device {
   public:
     /**
      * @brief Creates a logical device to be used by Vulkan.
      *
-     * The created device is compliant with the passed QueueRequest object, i.e. 
-     * its retrieved queues have the capabilities defined in the request. 
+     * The created device is compliant with the passed QueueRequest object, i.e.
+     * its retrieved queues have the capabilities defined in the request.
      *
-     * @param[in] instance A Vulkan instance (used to query for physical
-     * devices).
      * @param[in] surface The surface to render to (used to query for swapchain
      * and queue support).
      * @param[in] req Defines which kind of queues we wish to retrieve from the
@@ -35,8 +33,7 @@ namespace HLVulkan {
      * @throw std::runtime_error If for some reason a suitable device could not
      * be created.
      */
-    Device(Instance &&instance, Surface &&surface,
-           const QueueRequest &req);
+    Device(const Surface &surface, const QueueRequest &req);
 
     /**
      * @brief Deleted copy-constructor.
@@ -58,10 +55,13 @@ namespace HLVulkan {
      */
     Device &operator=(Device &&other);
 
+    // @TODO doc
     SCSupport getSwapchainSupport() const;
 
+    // @TODO doc
     std::optional<uint32_t> getQueueFamily(VkFlags flags) const;
 
+    // @TODO doc
     std::optional<uint32_t> getPresentQueueFamily() const;
 
     /**
@@ -104,13 +104,14 @@ namespace HLVulkan {
      */
     VkFormat findDepthFormat() const;
 
+    /**
+     * @brief Returns the packaged VkDevice.
+     */
+    VkDevice operator*() const;
+
     ~Device();
 
   private:
-    // An instance
-    Instance instance;
-    // A surface
-    Surface surface;
     // The physical device
     VkPhysicalDevice physical = VK_NULL_HANDLE;
     // The logical device

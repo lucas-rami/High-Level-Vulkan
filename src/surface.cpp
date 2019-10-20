@@ -31,6 +31,10 @@ namespace HLVulkan {
 
   VkSurfaceKHR Surface::operator*() const { return surface; }
 
+  VkInstance Surface::getInstance() const { return *instance; }
+
+  GLFWwindow *Surface::getWindow() const { return *window; }
+
   Surface::~Surface() {
     if (surface != VK_NULL_HANDLE) {
       vkDestroySurfaceKHR(*instance, surface, nullptr);
