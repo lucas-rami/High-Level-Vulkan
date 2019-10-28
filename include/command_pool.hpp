@@ -7,32 +7,36 @@
 
 namespace HLVulkan {
 
-    class CommandPool {
+  class CommandPool {
 
-      public:
-        CommandPool(Device device, Queue queue);
+  public:
+    CommandPool(VkDevice device, Queue queue);
 
-        CommandPool(Device device, Queue queue, uint32_t count);
+    CommandPool(VkDevice device, Queue queue, uint32_t count);
 
-        VkResult allocateCommandBuffers(uint32_t count);
+    CommandPool(const CommandPool &pool) = delete;
 
-        VkCommandBuffer beginSingleTimeCommands();
+    CommandPool &operator=(const CommandPool &pool) = delete;
 
-        VkResult endSingleTimeCommands(VkCommandBuffer commandBuffer);
+    VkResult allocateCommandBuffers(uint32_t count);
 
-        VkCommandBuffer getCommandBuffer(size_t index);
+    VkResult beginSingleTimeCommand(VkCommandBuffer command);
 
-        VkCommandPool getPool();
+    VkResult endSingleTimeCommand(VkCommandBuffer command);
 
-        virtual ~CommandPool();
+    VkCommandBuffer getCommandBuffer(size_t index) const;
 
-      private:
-        const Device device;
-        const Queue queue;
+    VkCommandPool getPool() const;
 
-        VkCommandPool pool = VK_NULL_HANDLE;
-        std::vector<VkCommandBuffer> commandBuffers;
-    };
+    virtual ~CommandPool();
+
+  private:
+    VkDevice device;
+    Queue queue;
+
+    VkCommandPool handle = VK_NULL_HANDLE;
+    std::vector<VkCommandBuffer> commands;
+  };
 
 } // namespace HLVulkan
 

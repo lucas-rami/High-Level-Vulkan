@@ -27,13 +27,13 @@ namespace HLVulkan {
      *
      * @param[in] surface The surface to render to (used to query for swapchain
      * and queue support).
-     * @param[in] req Defines which kind of queues we wish to retrieve from the
-     * device.
+     * @param[in] reqQueues Defines which kind of queues we wish to retrieve
+     * from the device.
      *
      * @throw std::runtime_error If for some reason a suitable device could not
      * be created.
      */
-    Device(const Surface &surface, const QueueRequest &req);
+    Device(const Surface &surface, const std::vector<Queue> &reqQueues);
 
     /**
      * @brief Deleted copy-constructor.
@@ -118,12 +118,8 @@ namespace HLVulkan {
     VkDevice logical = VK_NULL_HANDLE;
     // Defines the swapchain support for the device
     SCSupport scSupport;
-    // Queues description
-    QueueResult queuesDesc;
-    // Queue handles (except presentation)
-    std::vector<VkQueue> queues;
-    // Presentation queue handle
-    VkQueue presentQueue = VK_NULL_HANDLE;
+    // Queues instantiated from the device 
+    std::vector<Queue> queues;
   };
 } // namespace HLVulkan
 

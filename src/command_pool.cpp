@@ -2,100 +2,113 @@
 
 namespace HLVulkan {
 
-    CommandPool::CommandPool(Device device, Queue queue) : device(device), queue(queue) {
+  CommandPool::CommandPool(VkDevice device, Queue queue)
+      : device(device), queue(queue) {
 
-        VkCommandPoolCreateInfo poolInfo = {};
-        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.queueFamilyIndex = queue.family;
+    VkCommandPoolCreateInfo poolInfo = {};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.queueFamilyIndex = queue.family;
 
-        VK_CHECK_FAIL(vkCreateCommandPool(device.logical, &poolInfo, nullptr, &pool), "command pool creation failed");
+    VK_THROW(vkCreateCommandPool(device, &poolInfo, nullptr, &handle),
+             "command pool creation failed");
+  }
+
+  CommandPool::CommandPool(VkDevice device, Queue queue, uint32_t count)
+      : device(device), queue(queue) {
+
+    VkCommandPoolCreateInfo poolInfo = {};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.queueFamilyIndex = queue.family;
+
+    VK_THROW(vkCreateCommandPool(device, &poolInfo, nullptr, &handle),
+             "command pool creation failed");
+    VK_THROW(allocateCommandBuffers(count),
+             "failed to allocate command buffers");
+  }
+
+  VkResult CommandPool::allocateCommandBuffers(uint32_t count) {
+
+    ASSERT_FAIL(count != 0, "count must be strictly positive");
+    // @TODO this is a big limitation
+    ASSERT_FAIL(commands.empty(),
+                "allocate should only be called once per command pool");
+
+    // Resize the vector
+    commands.resize((size_t)count);
+
+    VkCommandBufferAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = handle;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = count;
+
+    VkResult ret;
+    if ((ret = vkAllocateCommandBuffers(device, &allocInfo, commands.data())) !=
+        VK_SUCCESS) {
+      // Resize the vector to 0 if the allocation fails
+      commands.resize(0);
+    }
+    return ret;
+  }
+
+  VkResult CommandPool::beginSingleTimeCommand(VkCommandBuffer command) {
+
+    // Allocate the command buffer
+    VkCommandBufferAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandPool = handle;
+    allocInfo.commandBufferCount = 1;
+    VK_RET(vkAllocateCommandBuffers(device, &allocInfo, &command));
+
+    // Begin recording
+    VkCommandBufferBeginInfo beginInfo = {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    VK_RET(vkBeginCommandBuffer(command, &beginInfo));
+
+    return VK_SUCCESS;
+  }
+
+  VkResult CommandPool::endSingleTimeCommand(VkCommandBuffer command) {
+
+    // End recording
+    VkResult ret;
+    if ((ret = vkEndCommandBuffer(command)) != VK_SUCCESS) {
+      // Failed to end recording, free buffer and return
+      vkFreeCommandBuffers(device, handle, 1, &command);
+      return ret;
     }
 
-    CommandPool::CommandPool(Device device, Queue queue, uint32_t count) : device(device), queue(queue) {
-
-        VkCommandPoolCreateInfo poolInfo = {};
-        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.queueFamilyIndex = queue.family;
-
-        VK_CHECK_FAIL(vkCreateCommandPool(device.logical, &poolInfo, nullptr, &pool), "command pool creation failed");
-        VK_CHECK_FAIL(allocateCommandBuffers(count), "failed to allocate command buffers");
+    // Submit to the queue
+    VkSubmitInfo submitInfo = {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &command;
+    if ((ret = vkQueueSubmit(queue.handle, 1, &submitInfo, VK_NULL_HANDLE)) !=
+        VK_SUCCESS) {
+      // Queue submission failed, free buffer and return
+      vkFreeCommandBuffers(device, handle, 1, &command);
+      return ret;
     }
 
-    VkResult CommandPool::allocateCommandBuffers(uint32_t count) {
+    // Wait for the queue to idle
+    ret = vkQueueWaitIdle(queue.handle);
+    vkFreeCommandBuffers(device, handle, 1, &command);
+    return ret;
+  }
 
-        ASSERT_MSG(count != 0, "count must be strictly positive");
-        ASSERT_MSG(commandBuffers.empty(), "allocate should only be called once per command pool"); // @TODO: this is a hardcore limitation
+  VkCommandBuffer CommandPool::getCommandBuffer(size_t index) const {
+    ASSERT_FAIL(index < commands.size(), "invalid index");
+    return commands[index];
+  }
 
-        // Resize the vector
-        commandBuffers.resize((size_t)count);
+  VkCommandPool CommandPool::getPool() const { return handle; }
 
-        VkCommandBufferAllocateInfo allocInfo = {};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.commandPool = pool;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
-
-        VkResult ret;
-        if ((ret = vkAllocateCommandBuffers(device.logical, &allocInfo, commandBuffers.data())) != VK_SUCCESS) {
-            // Resize the vector to 0 if the allocation fails
-            commandBuffers.resize(0);
-        }
-        return ret;
+  CommandPool::~CommandPool() {
+    if (handle != VK_NULL_HANDLE) {
+      vkDestroyCommandPool(device, handle, nullptr);
     }
-
-    VkCommandBuffer CommandPool::beginSingleTimeCommands() {
-
-        VkCommandBufferAllocateInfo allocInfo = {};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = pool;
-        allocInfo.commandBufferCount = 1;
-
-        VkCommandBuffer commandBuffer;
-        VK_CHECK_RET_NULL(vkAllocateCommandBuffers(device.logical, &allocInfo, &commandBuffer));
-
-        VkCommandBufferBeginInfo beginInfo = {};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        VK_CHECK_RET_NULL(vkBeginCommandBuffer(commandBuffer, &beginInfo));
-
-        return commandBuffer;
-    }
-
-    VkResult CommandPool::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
-
-        // End recording
-        VkResult ret;
-        if ((ret = vkEndCommandBuffer(commandBuffer)) != VK_SUCCESS) {
-            vkFreeCommandBuffers(device.logical, pool, 1, &commandBuffer);
-            return ret;
-        }
-
-        VkSubmitInfo submitInfo = {};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
-
-        // Submit to the queue
-        if ((ret = vkQueueSubmit(queue.queue, 1, &submitInfo, VK_NULL_HANDLE)) != VK_SUCCESS) {
-            vkFreeCommandBuffers(device.logical, pool, 1, &commandBuffer);
-            return ret;
-        }
-
-        // Wait for the queue to idle
-        ret = vkQueueWaitIdle(queue.queue);
-        vkFreeCommandBuffers(device.logical, pool, 1, &commandBuffer);
-        return ret;
-    }
-
-    VkCommandBuffer CommandPool::getCommandBuffer(size_t index) {
-        ASSERT_MSG(index < commandBuffers.size(), "invalid index");
-        return commandBuffers[index];
-    }
-
-    VkCommandPool CommandPool::getPool() { return pool; }
-
-    CommandPool::~CommandPool() { vkDestroyCommandPool(device.logical, pool, nullptr); }
+  }
 
 } // namespace HLVulkan

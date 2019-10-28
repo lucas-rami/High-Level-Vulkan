@@ -16,10 +16,10 @@ namespace HLVulkan {
     /**
      * @brief Creates a Vulkan surface.
      *
-     * @param[in] instance The associated instance.
+     * @param[in] instance The associated Vulkan instance.
      * @param[in] window The associated GLFW window.
      */
-    Surface(Instance &&instance, Window &&window);
+    Surface(VkInstance instance, Window &&window);
 
     /**
      * @brief Deleted copy-constructor.
@@ -67,7 +67,7 @@ namespace HLVulkan {
 
   private:
     // The instance associated with the surface
-    Instance instance;
+    VkInstance instance = VK_NULL_HANDLE;
     // The window associated with the surface
     Window window;
     // The Vulkan surface

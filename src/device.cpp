@@ -30,11 +30,13 @@ namespace HLVulkan {
     return requiredExtensions.empty();
   }
 
-  Device::Device(const Surface &surface, const QueueRequest &req) {
+  Device::Device(const Surface &surface, const std::vector<Queue> &reqQueues) {
 
-    auto instance = surface.getInstance();
+    queues = reqQueues;
 
     // ***** Pick a physical device *****
+
+    auto instance = surface.getInstance();
 
     // Get list of compatible physical devices
     uint32_t phyDevCount = 0;
@@ -48,12 +50,13 @@ namespace HLVulkan {
     // List of required extensions
     std::vector<const char *> reqExt{VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
+    bool queueSupport;
+
     // Select a physical device
     for (const auto &phyDev : phyDevs) {
 
       // Reset structures
       scSupport = SCSupport();
-      queuesDesc = QueueResult();
 
       // Check for extension support
       if (!areDevExtSupported(phyDev, reqExt)) {
@@ -64,13 +67,12 @@ namespace HLVulkan {
         continue;
       }
       // Check for queue support
-      if (req.process(phyDev, *surface, queuesDesc) != VK_SUCCESS) {
+      if (Queue::checkSupport(phyDev, *surface, queues, queueSupport) !=
+          VK_SUCCESS) {
         continue;
       }
-      if (req.satisfied(queuesDesc)) {
-        physical = phyDev;
-        break;
-      }
+
+      physical = phyDev;
     }
 
     ASSERT_THROW(physical != VK_NULL_HANDLE, "failed to find a suitable GPU");
@@ -79,11 +81,8 @@ namespace HLVulkan {
 
     // Get set of queue families
     std::set<uint32_t> uniqueQueueFams = {};
-    for (const auto &fam : queuesDesc.families) {
-      uniqueQueueFams.insert(fam.second);
-    }
-    if (queuesDesc.presentFamily.has_value()) {
-      uniqueQueueFams.insert(*queuesDesc.presentFamily);
+    for (const auto &queue : queues) {
+      uniqueQueueFams.insert(queue.family);
     }
 
     // Create one DeviceQueueInfo per queue family
@@ -113,21 +112,14 @@ namespace HLVulkan {
              "failed to create logical device!");
 
     // ***** Retrieve queue handles *****
-
-    for (const auto &fam : queuesDesc.families) {
-      VkQueue queue;
-      vkGetDeviceQueue(logical, fam.second, 0, &queue);
-      queues.push_back(queue);
-    }
-    if (queuesDesc.presentFamily.has_value()) {
-      vkGetDeviceQueue(logical, *queuesDesc.presentFamily, 0, &presentQueue);
+    for (auto &queue : queues) {
+      vkGetDeviceQueue(logical, queue.family, 0, &queue.handle);
     }
   }
 
   Device::Device(Device &&other)
       : physical(other.physical), logical(other.logical),
-        scSupport(std::move(other.scSupport)), queues(std::move(other.queues)),
-        presentQueue(other.presentQueue) {
+        scSupport(std::move(other.scSupport)), queues(std::move(other.queues)) {
     other.logical = VK_NULL_HANDLE;
   }
 
@@ -138,7 +130,6 @@ namespace HLVulkan {
       logical = other.logical;
       scSupport = std::move(other.scSupport);
       queues = std::move(other.queues);
-      presentQueue = presentQueue;
 
       other.logical = VK_NULL_HANDLE;
     }
@@ -148,16 +139,21 @@ namespace HLVulkan {
   SCSupport Device::getSwapchainSupport() const { return scSupport; }
 
   std::optional<uint32_t> Device::getQueueFamily(VkFlags flags) const {
-    for (const auto &family : queuesDesc.families) {
-      if (family.first & flags == flags) {
-        return family.second;
+    for (const auto &queue : queues) {
+      if (flags & queue.flags == queue.flags) {
+        return queue.family;
       }
     }
     return {};
   }
 
   std::optional<uint32_t> Device::getPresentQueueFamily() const {
-    return queuesDesc.presentFamily;
+    for (const auto &queue : queues) {
+      if (queue.present) {
+        return queue.family;
+      }
+    }
+    return {};
   }
 
   uint32_t Device::findMemoryType(uint32_t typeFilter,
