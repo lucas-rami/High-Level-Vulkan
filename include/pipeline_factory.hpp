@@ -3,153 +3,146 @@
 
 #include <unordered_set>
 
-#include "device.hpp"
-#include "pipeline_info.hpp"
+#include "pipeline.hpp"
 #include "pipeline_spec.hpp"
 #include "shader.hpp"
 
 namespace HLVulkan {
 
-    class PipelineFactory {
+  class PipelineFactory {
 
-      public:
-        PipelineFactory(HLVulkan::Device &device);
+  public:
+    template <class VertexFormat, class PipelineSpec>
+    static PipelineInfo
+    createGraphicPipeline(VkDevice device, const VertexFormat &vertFormat,
+                          const PipelineSpec &spec, VkRenderPass renderPass) {
 
-        template <class VertexFormat, class PipelineSpec>
-        PipelineInfo generateNewPipeline(const VertexFormat &vertFormat, const PipelineSpec &spec, VkRenderPass renderPass) {
-            PipelineInfo info = createGraphicsPipeline(device, vertFormat, spec, renderPass);
-            if (info.pipeline != VK_NULL_HANDLE) {
-                addPipelineToSet(info);
-            }
-            return info;
-        }
+      // Load 2 dummy shaders (vertex + fragment). ShaderModules freed
+      // automatically when these objects go out of scope
+      HLVulkan::Shader vertexShader{device, "../data/shaders/vk_vert.spv",
+                                    VK_SHADER_STAGE_VERTEX_BIT};
+      HLVulkan::Shader fragmentShader{device, "../data/shaders/vk_frag.spv",
+                                      VK_SHADER_STAGE_FRAGMENT_BIT};
 
-        template <class VertexFormat, class PipelineSpec>
-        static PipelineInfo createGraphicPipeline(const HLVulkan::Device &device, const VertexFormat &vertFormat, const PipelineSpec &spec,
-                                                  VkRenderPass renderPass) {
+      // Create shader stages info
+      auto vertexShaderInfo = vertexShader.getShaderStageInfo();
+      auto fragmentShaderInfo = fragmentShader.getShaderStageInfo();
+      if (!vertexShaderInfo || !fragmentShaderInfo) {
+        return {VK_NULL_HANDLE, VK_NULL_HANDLE};
+      }
 
-            // Load 2 dummy shaders (vertex + fragment). ShaderModules freed automatically when these objects go out of scope
-            HLVulkan::Shader vertexShader{device, "../data/shaders/vk_vert.spv", VK_SHADER_STAGE_VERTEX_BIT};
-            HLVulkan::Shader fragmentShader{device, "../data/shaders/vk_frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT};
+      std::vector<VkPipelineShaderStageCreateInfo> shaderStages{
+          *vertexShaderInfo, *fragmentShaderInfo};
 
-            // Create shader stages info
-            auto vertexShaderInfo = vertexShader.getShaderStageInfo();
-            auto fragmentShaderInfo = fragmentShader.getShaderStageInfo();
-            if (!vertexShaderInfo || !fragmentShaderInfo) {
-                return {VK_NULL_HANDLE, VK_NULL_HANDLE};
-            }
+      auto bindingDescription = vertFormat.getBindingDescription();
+      auto attributeDescriptions = vertFormat.getAttributeDescriptions();
 
-            std::vector<VkPipelineShaderStageCreateInfo> shaderStages{*vertexShaderInfo, *fragmentShaderInfo};
+      // Vertex input
+      VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
+      vertexInputInfo.sType =
+          VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+      vertexInputInfo.vertexBindingDescriptionCount = 1;
+      vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+      vertexInputInfo.vertexAttributeDescriptionCount =
+          static_cast<uint32_t>(attributeDescriptions.size());
+      vertexInputInfo.pVertexAttributeDescriptions =
+          attributeDescriptions.data();
 
-            auto bindingDescription = vertFormat.getBindingDescription();
-            auto attributeDescriptions = vertFormat.getAttributeDescriptions();
+      // Input assembly
+      VkPipelineInputAssemblyStateCreateInfo inputAssembly =
+          spec.getInputAssembly();
 
-            // Vertex input
-            VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
-            vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-            vertexInputInfo.vertexBindingDescriptionCount = 1;
-            vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-            vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-            vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+      // Viewports
+      std::vector<VkViewport> viewports = spec.getViewports();
 
-            // Input assembly
-            VkPipelineInputAssemblyStateCreateInfo inputAssembly = spec.getInputAssembly();
+      // Scissors
+      std::vector<VkRect2D> scissors = spec.getScissors();
 
-            // Viewports
-            std::vector<VkViewport> viewports = spec.getViewports();
+      // Viewport state
+      VkPipelineViewportStateCreateInfo viewportState = {};
+      viewportState.sType =
+          VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+      viewportState.viewportCount = static_cast<uint32_t>(viewports.size());
+      viewportState.pViewports = viewports.data();
+      viewportState.scissorCount = static_cast<uint32_t>(scissors.size());
+      viewportState.pScissors = scissors.data();
 
-            // Scissors
-            std::vector<VkRect2D> scissors = spec.getScissors();
+      // Rasterizer
+      VkPipelineRasterizationStateCreateInfo rasterizer = spec.getRasterizer();
 
-            // Viewport state
-            VkPipelineViewportStateCreateInfo viewportState = {};
-            viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-            viewportState.viewportCount = static_cast<uint32_t>(viewports.size());
-            viewportState.pViewports = viewports.data();
-            viewportState.scissorCount = static_cast<uint32_t>(scissors.size());
-            viewportState.pScissors = scissors.data();
+      // Multisampling
+      VkPipelineMultisampleStateCreateInfo multisampling =
+          spec.getMultisampling();
 
-            // Rasterizer
-            VkPipelineRasterizationStateCreateInfo rasterizer = spec.getRasterizer();
+      // Color blending
+      std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments =
+          spec.getColorBlending();
 
-            // Multisampling
-            VkPipelineMultisampleStateCreateInfo multisampling = spec.getMultisampling();
+      // Color blend state (depends on colorBlendAttachments)
+      VkPipelineColorBlendStateCreateInfo colorBlending = {};
+      colorBlending.sType =
+          VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+      colorBlending.logicOpEnable = VK_FALSE;
+      colorBlending.attachmentCount =
+          static_cast<uint32_t>(colorBlendAttachments.size());
+      colorBlending.pAttachments = colorBlendAttachments.data();
 
-            // Color blending
-            std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments = spec.getColorBlending();
+      // Descriptor set layouts
+      std::vector<VkDescriptorSetLayout> descriptorSetLayouts =
+          spec.getDescriptorSetLayouts();
 
-            // Color blend state (depends on colorBlendAttachments)
-            VkPipelineColorBlendStateCreateInfo colorBlending = {};
-            colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-            colorBlending.logicOpEnable = VK_FALSE;
-            colorBlending.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
-            colorBlending.pAttachments = colorBlendAttachments.data();
+      // Pipeline layout (depends on descriptorSetLayouts)
+      VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+      pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+      pipelineLayoutInfo.setLayoutCount =
+          static_cast<uint32_t>(descriptorSetLayouts.size());
+      pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 
-            // Descriptor set layouts
-            std::vector<VkDescriptorSetLayout> descriptorSetLayouts = spec.getDescriptorSetLayouts();
+      VkResult ret;
+      VkPipelineLayout layout;
+      if ((ret = vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr,
+                                        &layout)) != VK_SUCCESS) {
+        return {VK_NULL_HANDLE, VK_NULL_HANDLE};
+      }
 
-            // Pipeline layout (depends on descriptorSetLayouts)
-            VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
-            pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-            pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
-            pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
+      // Depth/Stencil
+      VkPipelineDepthStencilStateCreateInfo depthStencil =
+          spec.getDepthStencil();
 
-            VkResult ret;
-            VkPipelineLayout layout;
-            if ((ret = vkCreatePipelineLayout(device.logical, &pipelineLayoutInfo, nullptr, &layout)) != VK_SUCCESS) {
-                return {VK_NULL_HANDLE, VK_NULL_HANDLE};
-            }
+      // Final structure (depends on all of the above + render pass)
+      VkGraphicsPipelineCreateInfo pipelineInfo = {};
+      pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+      pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
+      pipelineInfo.pStages = shaderStages.data();
+      pipelineInfo.pVertexInputState = &vertexInputInfo;
+      pipelineInfo.pInputAssemblyState = &inputAssembly;
+      pipelineInfo.pViewportState = &viewportState;
+      pipelineInfo.pRasterizationState = &rasterizer;
+      pipelineInfo.pMultisampleState = &multisampling;
+      pipelineInfo.pDepthStencilState = &depthStencil;
+      pipelineInfo.pColorBlendState = &colorBlending;
+      pipelineInfo.pDynamicState = nullptr;
+      pipelineInfo.layout = layout;
+      pipelineInfo.renderPass = renderPass;
+      pipelineInfo.subpass = 0;
+      pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+      pipelineInfo.basePipelineIndex = -1;
 
-            // Depth/Stencil
-            VkPipelineDepthStencilStateCreateInfo depthStencil = spec.getDepthStencil();
+      // Create the graphics pipeline
+      VkPipeline pipeline;
+      if ((ret = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1,
+                                           &pipelineInfo, nullptr,
+                                           &pipeline)) != VK_SUCCESS) {
+        vkDestroyPipelineLayout(device.logical, layout, nullptr);
+        return {VK_NULL_HANDLE, VK_NULL_HANDLE};
+      }
 
-            // Final structure (depends on all of the above + render pass)
-            VkGraphicsPipelineCreateInfo pipelineInfo = {};
-            pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-            pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
-            pipelineInfo.pStages = shaderStages.data();
-            pipelineInfo.pVertexInputState = &vertexInputInfo;
-            pipelineInfo.pInputAssemblyState = &inputAssembly;
-            pipelineInfo.pViewportState = &viewportState;
-            pipelineInfo.pRasterizationState = &rasterizer;
-            pipelineInfo.pMultisampleState = &multisampling;
-            pipelineInfo.pDepthStencilState = &depthStencil;
-            pipelineInfo.pColorBlendState = &colorBlending;
-            pipelineInfo.pDynamicState = nullptr;
-            pipelineInfo.layout = layout;
-            pipelineInfo.renderPass = renderPass;
-            pipelineInfo.subpass = 0;
-            pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
-            pipelineInfo.basePipelineIndex = -1;
+      // The pipeline has been created successfully
+      return {pipeline, layout};
+    }
 
-            // Create the graphics pipeline
-            VkPipeline pipeline;
-            if ((ret = vkCreateGraphicsPipelines(device.logical, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline)) != VK_SUCCESS) {
-                vkDestroyPipelineLayout(device.logical, layout, nullptr);
-                return {VK_NULL_HANDLE, VK_NULL_HANDLE};
-            }
-
-            // The pipeline has been created successfully
-            return {pipeline, layout};
-        }
-
-        void destroyPipeline(VkPipeline pipeline);
-
-        virtual ~PipelineFactory();
-
-      private:
-        struct PipelineInfoHasher {
-            size_t operator()(const PipelineInfo &info) const { return std::hash<VkPipeline>{}(info.pipeline); }
-        };
-        struct PipelineInfoComparator {
-            bool operator()(const PipelineInfo &info1, const PipelineInfo &info2) const { return info1.pipeline == info2.pipeline; }
-        };
-
-        HLVulkan::Device device;
-        std::unordered_set<PipelineInfo, PipelineInfoHasher, PipelineInfoComparator> createdPipelines;
-
-        void addPipelineToSet(PipelineInfo &info);
-    };
+    virtual ~PipelineFactory();
+  };
 
 } // namespace HLVulkan
 
