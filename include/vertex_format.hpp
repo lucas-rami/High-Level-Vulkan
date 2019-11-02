@@ -1,28 +1,27 @@
 #ifndef __HL_VULKAN_VERTEX_FORMAT_HPP__
 #define __HL_VULKAN_VERTEX_FORMAT_HPP__
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-
-#include <vulkan/vulkan.h>
-
-#include <vector>
+#include "hl_vulkan.hpp"
 
 namespace HLVulkan {
 
-    class VertexFormat {
+  class VertexFormat {
 
-      public:
-        std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions() const;
-        VkVertexInputBindingDescription getBindingDescription() const;
+  public:
+    std::vector<VkVertexInputAttributeDescription>
+    getAttributeDescriptions() const;
 
-        virtual ~VertexFormat();
+    VkVertexInputBindingDescription getBindingDescription() const;
 
-      private:
-        virtual std::vector<VkVertexInputAttributeDescription> createAttributeDescriptions() const = 0;
-        virtual VkVertexInputBindingDescription createBindingDescription() const = 0;
-    };
+    virtual ~VertexFormat();
+
+  private:
+    virtual std::vector<VkVertexInputAttributeDescription>
+    createAttributeDescriptions() const = 0;
+
+    virtual VkVertexInputBindingDescription
+    createBindingDescription() const = 0;
+  };
 
 } // namespace HLVulkan
 

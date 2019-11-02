@@ -17,7 +17,7 @@ set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(SOURCES #${SRC_DIR}/buffer.cpp 
             ${SRC_DIR}/command_pool.cpp 
             ${SRC_DIR}/device.cpp 
-            #${SRC_DIR}/fence.cpp
+            ${SRC_DIR}/fence.cpp
             ${SRC_DIR}/hl_vulkan.cpp
             #${SRC_DIR}/image.cpp
             ${SRC_DIR}/instance.cpp
@@ -32,7 +32,7 @@ set(SOURCES #${SRC_DIR}/buffer.cpp
             ${SRC_DIR}/sc_support.cpp
             ${SRC_DIR}/surface.cpp
             ${SRC_DIR}/swapchain.cpp
-            #${SRC_DIR}/vertex_format.cpp
+            ${SRC_DIR}/vertex_format.cpp
             ${SRC_DIR}/window.cpp
 )
 

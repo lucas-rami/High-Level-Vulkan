@@ -2,9 +2,14 @@
 
 namespace HLVulkan {
 
-    std::vector<VkVertexInputAttributeDescription> VertexFormat::getAttributeDescriptions() const { return createAttributeDescriptions(); }
-    VkVertexInputBindingDescription VertexFormat::getBindingDescription() const { return createBindingDescription(); }
+  std::vector<VkVertexInputAttributeDescription>
+  VertexFormat::getAttributeDescriptions() const {
+    return createAttributeDescriptions();
+  }
+  VkVertexInputBindingDescription VertexFormat::getBindingDescription() const {
+    return createBindingDescription();
+  }
 
-    VertexFormat::~VertexFormat() {}
+  VertexFormat::~VertexFormat() {}
 
 } // namespace HLVulkan

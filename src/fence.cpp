@@ -2,17 +2,17 @@
 
 namespace HLVulkan {
 
-    Fence::Fence(Device device) : device(device) {
+  Fence::Fence(VkDevice device) : device(device) {
 
-        VkFenceCreateInfo fenceInfo = {};
-        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    VkFenceCreateInfo fenceInfo = {};
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    VK_THROW(vkCreateFence(device, &fenceInfo, nullptr, &handle),
+             "failed to create fence");
+  }
 
-        VK_CHECK_FAIL(vkCreateFence(device.logical, &fenceInfo, nullptr, &fence), "failed to create fence");
-    }
+  VkFence Fence::operator*() const { return handle; }
 
-    const VkFence Fence::getFence() { return fence; }
-
-    Fence::~Fence() { vkDestroyFence(device.logical, fence, nullptr); }
+  Fence::~Fence() { vkDestroyFence(device, handle, nullptr); }
 
 } // namespace HLVulkan

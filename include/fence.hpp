@@ -2,22 +2,22 @@
 #define __HL_VULKAN_FENCE_HPP__
 
 #include "device.hpp"
-#include "hl_vulkan.hpp"
 
 namespace HLVulkan {
 
-    class Fence {
-      private:
-        Device device;
-        VkFence fence = VK_NULL_HANDLE;
+  class Fence {
 
-      public:
-        Fence(Device device);
+  public:
+    Fence(VkDevice device);
 
-        const VkFence getFence();
+    VkFence operator*() const;
 
-        ~Fence();
-    };
+    virtual ~Fence();
+
+  private:
+    VkDevice device = VK_NULL_HANDLE;
+    VkFence handle = VK_NULL_HANDLE;
+  };
 
 } // namespace HLVulkan
 
