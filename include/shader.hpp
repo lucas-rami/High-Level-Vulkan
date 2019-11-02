@@ -11,21 +11,38 @@ namespace HLVulkan {
   class Shader {
 
   public:
-    static int readFile(const std::string &filename, std::vector<char> &data);
-
     Shader(VkDevice device, const std::string &filename,
-           VkShaderStageFlagBits stage, const std::string & = "main");
+           VkShaderStageFlagBits stage, const std::string &pName = "main");
 
-    std::optional<VkPipelineShaderStageCreateInfo> getShaderStageInfo();
+    Shader(VkDevice device, const std::vector<char> &code,
+           VkShaderStageFlagBits stage, const std::string &pName = "main");
+
+    Shader(const Shader &other) = delete;
+
+    Shader &operator=(const Shader &other) = delete;
+
+    Shader(Shader &&other);
+
+    Shader &operator=(Shader &&other);
+
+    VkPipelineShaderStageCreateInfo getInfo() const;
+
+    static int shaderFromFile(const std::string &filename,
+                              std::vector<char> &code);
+
+    static VkResult createShaderModule(VkDevice device,
+                                       const std::vector<char> &code,
+                                       VkShaderModule &shaderModule);
 
     virtual ~Shader();
 
   private:
-    VkDevice device;
-    std::string filename;
-    std::string pName;
-    VkShaderStageFlagBits stage;
-    VkShaderModule shaderModule = VK_NULL_HANDLE;
+    VkDevice device = VK_NULL_HANDLE;
+    VkShaderModule handle = VK_NULL_HANDLE;
+    VkPipelineShaderStageCreateInfo shaderInfo = {};
+
+    void createShaderInfo(VkShaderStageFlagBits stage,
+                          const std::string &pName);
   };
 
 } // namespace HLVulkan

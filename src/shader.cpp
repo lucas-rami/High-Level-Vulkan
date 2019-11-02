@@ -4,34 +4,78 @@
 
 namespace HLVulkan {
 
-  static VkResult createShaderModule(VkDevice logical,
-                                     const std::vector<char> &code,
-                                     VkShaderModule &shaderModule) {
+  Shader::Shader(VkDevice device, const std::string &filename,
+                 VkShaderStageFlagBits stage, const std::string &pName)
+      : device(device) {
+
+    std::vector<char> code;
+    ASSERT_THROW(Shader::shaderFromFile(filename, code),
+                 "failed to read shader file");
+    VK_THROW(Shader::createShaderModule(device, code, handle),
+             "failed to create shader module");
+
+    // Create shader info
+    createShaderInfo(stage, pName);
+  }
+
+  Shader::Shader(VkDevice device, const std::vector<char> &code,
+                 VkShaderStageFlagBits stage, const std::string &pName)
+      : device(device) {
+
+    VK_THROW(Shader::createShaderModule(device, code, handle),
+             "failed to create shader module");
+
+    // Create shader info
+    createShaderInfo(stage, pName);
+  }
+
+  Shader::Shader(Shader &&other)
+      : device(other.device), handle(other.handle),
+        shaderInfo(other.shaderInfo) {
+    other.handle = VK_NULL_HANDLE;
+  }
+
+  Shader &Shader::operator=(Shader &&other) {
+    // Self-assignment detection
+    if (&other != this) {
+      device = other.device;
+      handle = other.handle;
+      shaderInfo = other.shaderInfo;
+
+      other.handle = VK_NULL_HANDLE;
+    }
+    return *this;
+  }
+
+  VkResult Shader::createShaderModule(VkDevice device,
+                                      const std::vector<char> &code,
+                                      VkShaderModule &shader) {
 
     VkShaderModuleCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = code.size();
     createInfo.pCode = reinterpret_cast<const uint32_t *>(code.data());
 
-    return vkCreateShaderModule(logical, &createInfo, nullptr, &shaderModule);
+    return vkCreateShaderModule(device, &createInfo, nullptr, &shader);
   }
 
-  // @TODO define custom error codes
-  int Shader::readFile(const std::string &filename, std::vector<char> &data) {
+  VkPipelineShaderStageCreateInfo Shader::getInfo() const { return shaderInfo; }
+
+  int Shader::shaderFromFile(const std::string &filename,
+                             std::vector<char> &code) {
     // Open the file in read binary mode
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
     if (!file.is_open()) {
-      return 1;
+      return -1;
     }
 
     // Store the file's content in the data buffer
     size_t fileSize = (size_t)file.tellg();
-    data.resize(fileSize);
+    code.resize(fileSize);
     file.seekg(0);
-    file.read(data.data(), fileSize);
-
-    if (data.size() != fileSize) {
-      return 2;
+    file.read(code.data(), fileSize);
+    if (code.size() != fileSize) {
+      return -1;
     }
 
     // Close the file and return
@@ -39,43 +83,17 @@ namespace HLVulkan {
     return 0;
   }
 
-  Shader::Shader(VkDevice device, const std::string &filename,
-                 VkShaderStageFlagBits stage, const std::string &pName)
-      : device(device), filename(filename), stage(stage), pName(pName) {}
-
-  std::optional<VkPipelineShaderStageCreateInfo> Shader::getShaderStageInfo() {
-
-    if (shaderModule == VK_NULL_HANDLE) {
-      std::vector<char> data;
-      int ret;
-      if ((ret = readFile(filename, data))) {
-        std::cout << "failed to read shader " << filename
-                  << ": readfile() failed with error code " << ret << std::endl;
-        return {};
-      }
-
-      VkResult vkRet;
-      if ((vkRet = createShaderModule(device, data, shaderModule)) !=
-          VK_SUCCESS) {
-        std::cout << "failed to create shader module: vkCreateShaderModule() "
-                     "failed with error code "
-                  << vkRet << std::endl;
-        return {};
-      }
-    }
-
-    VkPipelineShaderStageCreateInfo shaderStageInfo = {};
-    shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    shaderStageInfo.stage = stage;
-    shaderStageInfo.module = shaderModule;
-    shaderStageInfo.pName = pName.c_str();
-
-    return shaderStageInfo;
+  void Shader::createShaderInfo(VkShaderStageFlagBits stage,
+                                const std::string &pName) {
+    shaderInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    shaderInfo.stage = stage;
+    shaderInfo.module = handle;
+    shaderInfo.pName = pName.c_str();
   }
 
   Shader::~Shader() {
-    if (shaderModule != VK_NULL_HANDLE) {
-      vkDestroyShaderModule(device, shaderModule, nullptr);
+    if (handle != VK_NULL_HANDLE) {
+      vkDestroyShaderModule(device, handle, nullptr);
     }
   }
 

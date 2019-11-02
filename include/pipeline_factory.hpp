@@ -12,28 +12,14 @@ namespace HLVulkan {
   class PipelineFactory {
 
   public:
+    PipelineFactory() = delete;
+
     template <class VertexFormat, class PipelineSpec>
     VkResult createGraphicPipeline(const VertexFormat &vertFormat,
                                    const PipelineSpec &spec,
+                                   const std::vector<Shader> &shaders,
                                    VkRenderPass renderPass,
                                    Pipeline &pipeline) {
-
-      // Load 2 dummy shaders (vertex + fragment). ShaderModules freed
-      // automatically when these objects go out of scope
-      auto device = pipeline.getDevice();
-      HLVulkan::Shader vertexShader{device, "../data/shaders/vk_vert.spv",
-                                    VK_SHADER_STAGE_VERTEX_BIT};
-      HLVulkan::Shader fragmentShader{device, "../data/shaders/vk_frag.spv",
-                                      VK_SHADER_STAGE_FRAGMENT_BIT};
-
-      // Create shader stages info
-      auto vertexShaderInfo = vertexShader.getShaderStageInfo();
-      auto fragmentShaderInfo = fragmentShader.getShaderStageInfo();
-      VK_THROW(!vertexShaderInfo || !fragmentShaderInfo,
-               "failed to create shaders");
-
-      std::vector<VkPipelineShaderStageCreateInfo> shaderStages{
-          *vertexShaderInfo, *fragmentShaderInfo};
 
       auto bindingDescription = vertFormat.getBindingDescription();
       auto attributeDescriptions = vertFormat.getAttributeDescriptions();
@@ -102,6 +88,12 @@ namespace HLVulkan {
       // Depth/Stencil
       VkPipelineDepthStencilStateCreateInfo depthStencil =
           spec.getDepthStencil();
+
+      // Shader stages
+      std::vector<VkPipelineShaderStageCreateInfo> shaderStages{shaders.size()};
+      for (const auto &shader : shaders) {
+        shaderStages.push_back(shader.getInfo());
+      }
 
       // Final structure (depends on all of the above + render pass)
       VkGraphicsPipelineCreateInfo pipelineInfo = {};
