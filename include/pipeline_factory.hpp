@@ -13,12 +13,14 @@ namespace HLVulkan {
 
   public:
     template <class VertexFormat, class PipelineSpec>
-    static PipelineInfo
-    createGraphicPipeline(VkDevice device, const VertexFormat &vertFormat,
-                          const PipelineSpec &spec, VkRenderPass renderPass) {
+    VkResult createGraphicPipeline(const VertexFormat &vertFormat,
+                                   const PipelineSpec &spec,
+                                   VkRenderPass renderPass,
+                                   Pipeline &pipeline) {
 
       // Load 2 dummy shaders (vertex + fragment). ShaderModules freed
       // automatically when these objects go out of scope
+      auto device = pipeline.getDevice();
       HLVulkan::Shader vertexShader{device, "../data/shaders/vk_vert.spv",
                                     VK_SHADER_STAGE_VERTEX_BIT};
       HLVulkan::Shader fragmentShader{device, "../data/shaders/vk_frag.spv",
@@ -27,9 +29,8 @@ namespace HLVulkan {
       // Create shader stages info
       auto vertexShaderInfo = vertexShader.getShaderStageInfo();
       auto fragmentShaderInfo = fragmentShader.getShaderStageInfo();
-      if (!vertexShaderInfo || !fragmentShaderInfo) {
-        return {VK_NULL_HANDLE, VK_NULL_HANDLE};
-      }
+      VK_THROW(!vertexShaderInfo || !fragmentShaderInfo,
+               "failed to create shaders");
 
       std::vector<VkPipelineShaderStageCreateInfo> shaderStages{
           *vertexShaderInfo, *fragmentShaderInfo};
@@ -98,13 +99,6 @@ namespace HLVulkan {
           static_cast<uint32_t>(descriptorSetLayouts.size());
       pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 
-      VkResult ret;
-      VkPipelineLayout layout;
-      if ((ret = vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr,
-                                        &layout)) != VK_SUCCESS) {
-        return {VK_NULL_HANDLE, VK_NULL_HANDLE};
-      }
-
       // Depth/Stencil
       VkPipelineDepthStencilStateCreateInfo depthStencil =
           spec.getDepthStencil();
@@ -122,23 +116,13 @@ namespace HLVulkan {
       pipelineInfo.pDepthStencilState = &depthStencil;
       pipelineInfo.pColorBlendState = &colorBlending;
       pipelineInfo.pDynamicState = nullptr;
-      pipelineInfo.layout = layout;
       pipelineInfo.renderPass = renderPass;
       pipelineInfo.subpass = 0;
       pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
       pipelineInfo.basePipelineIndex = -1;
 
-      // Create the graphics pipeline
-      VkPipeline pipeline;
-      if ((ret = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1,
-                                           &pipelineInfo, nullptr,
-                                           &pipeline)) != VK_SUCCESS) {
-        vkDestroyPipelineLayout(device.logical, layout, nullptr);
-        return {VK_NULL_HANDLE, VK_NULL_HANDLE};
-      }
-
-      // The pipeline has been created successfully
-      return {pipeline, layout};
+      // Try to create the pipeline and return a VkResult
+      return pipeline.create(pipelineLayoutInfo, pipelineInfo);
     }
 
     virtual ~PipelineFactory();

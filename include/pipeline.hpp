@@ -7,15 +7,20 @@ namespace HLVulkan {
 
   class Pipeline {
   public:
-    Pipeline(VkDevice device, VkPipeline handle, VkPipelineLayout layout);
+    Pipeline(VkDevice device);
 
     Pipeline(const Pipeline &other) = delete;
-    
-    Pipeline& operator=(const Pipeline &other) = delete;
 
-    Pipeline(Pipeline &&other) = delete;
-    
-    Pipeline& operator=(Pipeline &&other) = delete;
+    Pipeline &operator=(const Pipeline &other) = delete;
+
+    Pipeline(Pipeline &&other);
+
+    Pipeline &operator=(Pipeline &&other);
+
+    VkResult create(const VkPipelineLayoutCreateInfo &layoutInfo,
+                    VkGraphicsPipelineCreateInfo &pipelineInfo);
+
+    VkDevice getDevice() const;
 
     virtual ~Pipeline();
 
