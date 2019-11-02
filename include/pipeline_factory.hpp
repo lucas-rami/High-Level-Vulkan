@@ -1,8 +1,6 @@
 #ifndef __HL_VULKAN_PIPELINE_FACTORY_HPP__
 #define __HL_VULKAN_PIPELINE_FACTORY_HPP__
 
-#include <unordered_set>
-
 #include "pipeline.hpp"
 #include "pipeline_spec.hpp"
 #include "shader.hpp"
@@ -15,11 +13,11 @@ namespace HLVulkan {
     PipelineFactory() = delete;
 
     template <class VertexFormat, class PipelineSpec>
-    VkResult createGraphicPipeline(const VertexFormat &vertFormat,
-                                   const PipelineSpec &spec,
-                                   const std::vector<Shader> &shaders,
-                                   VkRenderPass renderPass,
-                                   Pipeline &pipeline) {
+    static VkResult createGraphicPipeline(const VertexFormat &vertFormat,
+                                          const PipelineSpec &spec,
+                                          const std::vector<Shader> &shaders,
+                                          VkRenderPass renderPass,
+                                          Pipeline &pipeline) {
 
       auto bindingDescription = vertFormat.getBindingDescription();
       auto attributeDescriptions = vertFormat.getAttributeDescriptions();
@@ -116,8 +114,6 @@ namespace HLVulkan {
       // Try to create the pipeline and return a VkResult
       return pipeline.create(pipelineLayoutInfo, pipelineInfo);
     }
-
-    virtual ~PipelineFactory();
   };
 
 } // namespace HLVulkan

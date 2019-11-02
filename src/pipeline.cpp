@@ -2,8 +2,7 @@
 
 namespace HLVulkan {
 
-  Pipeline::Pipeline(VkDevice device)
-      : device(device), handle(VK_NULL_HANDLE), layout(VK_NULL_HANDLE) {}
+  Pipeline::Pipeline(VkDevice device) : device(device) {}
 
   Pipeline::Pipeline(Pipeline &&other)
       : device(other.device), handle(other.handle), layout(other.layout) {

@@ -1,10 +1,6 @@
 #ifndef __HL_VULKAN_PIPELINE_SPEC_HPP__
 #define __HL_VULKAN_PIPELINE_SPEC_HPP__
 
-#include <vulkan/vulkan.h>
-
-#include <vector>
-
 #include "hl_vulkan.hpp"
 
 namespace HLVulkan {

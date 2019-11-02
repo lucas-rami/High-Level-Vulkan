@@ -23,10 +23,11 @@ set(SOURCES #${SRC_DIR}/buffer.cpp
             ${SRC_DIR}/instance.cpp
             ${SRC_DIR}/pipeline.cpp
             ${SRC_DIR}/pipeline_factory.cpp
-            #${SRC_DIR}/pipeline_spec.cpp
+            ${SRC_DIR}/pipeline_spec.cpp
             ${SRC_DIR}/queue.cpp
-            #${SRC_DIR}/render_pass_factory.cpp
-            #${SRC_DIR}/render_pass_spec.cpp
+            ${SRC_DIR}/render_pass.cpp
+            ${SRC_DIR}/render_pass_factory.cpp
+            ${SRC_DIR}/render_pass_spec.cpp
             ${SRC_DIR}/shader.cpp
             ${SRC_DIR}/sc_support.cpp
             ${SRC_DIR}/surface.cpp
