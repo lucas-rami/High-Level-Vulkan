@@ -4,12 +4,8 @@
 #include "hl_vulkan.hpp"
 #include "instance.hpp"
 #include "queue.hpp"
-#include "surface.hpp"
 #include "sc_support.hpp"
-
-// Error code indicating that no suitable memory type could be found in the
-// device.
-#define NO_SUITABLE_MEMORY_TYPE 255
+#include "surface.hpp"
 
 namespace HLVulkan {
 
@@ -65,20 +61,6 @@ namespace HLVulkan {
     std::optional<uint32_t> getPresentQueueFamily() const;
 
     /**
-     * @brief Finds a suitable memory type on the device given a bitmask of
-     * supported memory types and a set of desired properties.
-     *
-     * @param[in] typeFilter A bitmask of supported memory types on the device.
-     * Must be the memoryTypeBits field of a VkMemoryRequirements struct.
-     * @param[in] properties A set of desired properties.
-     *
-     * @return A suitable memory type of minimum index if it exists,
-     * NO_SUITABLE_MEMORY_TYPE otherwise.
-     */
-    uint32_t findMemoryType(uint32_t typeFilter,
-                            VkMemoryPropertyFlags properties) const;
-
-    /**
      * @brief Finds a supported format on the device among an ordered list of
      * candidates.
      *
@@ -118,7 +100,7 @@ namespace HLVulkan {
     VkDevice logical = VK_NULL_HANDLE;
     // Defines the swapchain support for the device
     SCSupport scSupport;
-    // Queues instantiated from the device 
+    // Queues instantiated from the device
     std::vector<Queue> queues;
   };
 } // namespace HLVulkan

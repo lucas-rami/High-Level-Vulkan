@@ -8,43 +8,59 @@
 
 namespace HLVulkan {
 
-    class Image {
+  class Image {
 
-      private:
-        Device device;
-        VkExtent2D extent;
-        VkFormat format;
-        VkImageTiling tiling;
-        VkImageUsageFlags usage;
-        VkImageAspectFlags aspect;
+  public:
+    static VkResult create(VkDevice device, VkExtent2D extent, VkFormat format,
+                           VkImageTiling tiling, VkImageUsageFlags usage,
+                           VkImage &image);
 
-        VkImage image = VK_NULL_HANDLE;
-        VkDeviceMemory memory = VK_NULL_HANDLE;
-        VkImageView imageView = VK_NULL_HANDLE;
-        VkMemoryPropertyFlags memProperties = 0;
+    static VkResult createView(VkDevice device, VkImage image, VkFormat format,
+                               VkImageAspectFlags aspect,
+                               VkImageView &imageView);
 
-      public:
-        static VkResult createImage(VkDevice device, VkExtent2D extent, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkImage &image);
+    Image(VkPhysicalDevice phyDev, VkDevice device, VkExtent2D extent,
+          VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+          VkImageAspectFlags aspect, VkMemoryPropertyFlags memProperties);
 
-        static VkResult createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect, VkImageView &imageView);
+    Image(Image &other) = delete;
 
-        Image(Device device, VkExtent2D extent, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkImageAspectFlags aspect,
-              VkMemoryPropertyFlags properties);
+    Image& operator=(Image &other) = delete; 
 
-        VkResult bind(VkMemoryPropertyFlags properties);
+    Image(Image &&other);
 
-        VkResult copyTo(const Image &dstImage, CommandPool &commandPool);
+    Image& operator=(Image &&other); 
 
-        VkResult copyFromBuffer(VkImageLayout layout, Buffer &buffer, CommandPool &commandPool);
+    VkResult copyTo(const Image &dstImage, CommandPool &commandPool);
 
-        VkResult transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, CommandPool &commandPool);
+    VkResult copyFromBuffer(VkImageLayout layout, Buffer &buffer,
+                            CommandPool &commandPool);
 
-        VkImage getImage() const;
-        VkImageView getView() const;
-        VkDeviceMemory getMemory() const;
+    VkResult transitionImageLayout(VkImageLayout oldLayout,
+                                   VkImageLayout newLayout,
+                                   CommandPool &commandPool);
 
-        ~Image();
-    };
+    VkImage getImage() const;
+    VkImageView getView() const;
+    VkDeviceMemory getMemory() const;
+
+    virtual ~Image();
+
+  private:
+    VkDevice device;
+    VkExtent2D extent;
+    VkFormat format;
+    VkImageTiling tiling;
+    VkImageUsageFlags usage;
+    VkImageAspectFlags aspect;
+    VkMemoryPropertyFlags memProperties;
+
+    VkImage image = VK_NULL_HANDLE;
+    VkDeviceMemory memory = VK_NULL_HANDLE;
+    VkImageView imageView = VK_NULL_HANDLE;
+
+    VkResult bind(VkPhysicalDevice phyDev);
+  };
 
 } // namespace HLVulkan
 

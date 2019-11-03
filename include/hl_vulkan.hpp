@@ -40,14 +40,14 @@
     }                                                                          \
   }
 
-#define VK_NOT_NULL(handle)\
+#define VK_NOT_NULL(handle)                                                    \
   {                                                                            \
     if ((handle) == VK_NULL_HANDLE) {                                          \
       std::cout << "[FATAL]: " << #handle << " is VK_NULL_HANDLE"              \
                 << " in " << __FILE__ << " at line " << __LINE__ << std::endl; \
       assert(false);                                                           \
     }                                                                          \
-  }                                                    
+  }
 
 #define VK_RET(b)                                                              \
   {                                                                            \
@@ -56,6 +56,10 @@
       return res;                                                              \
     }                                                                          \
   }
+
+// Error code indicating that no suitable memory type could be found in a
+// device.
+#define NO_SUITABLE_MEMORY_TYPE 255
 
 namespace HLVulkan {
 
@@ -67,6 +71,21 @@ namespace HLVulkan {
    * @return true if the format has a stencil component.
    */
   bool hasStencilComponent(VkFormat format);
+
+  /**
+   * @brief Finds a suitable memory type on a device given a bitmask of
+   * supported memory types and a set of desired properties.
+   *
+   * @param[in] phyDevice A physical device.
+   * @param[in] typeFilter A bitmask of supported memory types on the device.
+   * Must be the memoryTypeBits field of a VkMemoryRequirements struct.
+   * @param[in] properties A set of desired properties.
+   *
+   * @return A suitable memory type of minimum index if it exists,
+   * NO_SUITABLE_MEMORY_TYPE otherwise.
+   */
+  uint32_t findMemoryType(VkPhysicalDevice phyDevice, uint32_t typeFilter,
+                          VkMemoryPropertyFlags properties);
 
 } // namespace HLVulkan
 

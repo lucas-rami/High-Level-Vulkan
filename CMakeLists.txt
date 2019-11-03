@@ -14,12 +14,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Sources
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(SOURCES #${SRC_DIR}/buffer.cpp 
+set(SOURCES ${SRC_DIR}/buffer.cpp 
             ${SRC_DIR}/command_pool.cpp 
             ${SRC_DIR}/device.cpp 
             ${SRC_DIR}/fence.cpp
             ${SRC_DIR}/hl_vulkan.cpp
-            #${SRC_DIR}/image.cpp
+            ${SRC_DIR}/image.cpp
             ${SRC_DIR}/instance.cpp
             ${SRC_DIR}/pipeline.cpp
             ${SRC_DIR}/pipeline_factory.cpp

@@ -27,8 +27,8 @@ namespace HLVulkan {
 
     VkPipelineShaderStageCreateInfo getInfo() const;
 
-    static int shaderFromFile(const std::string &filename,
-                              std::vector<char> &code);
+    static uint32_t shaderFromFile(const std::string &filename,
+                                   std::vector<char> &code);
 
     static VkResult createShaderModule(VkDevice device,
                                        const std::vector<char> &code,

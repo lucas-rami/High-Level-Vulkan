@@ -127,7 +127,7 @@ namespace HLVulkan {
     // Retrieve the swapchain's image views
     views.resize(count);
     for (size_t i = 0; i < count; ++i) {
-      VK_THROW(Image::createImageView(*device, images[i], surfaceFormat.format,
+      VK_THROW(Image::createView(*device, images[i], surfaceFormat.format,
                                       VK_IMAGE_ASPECT_COLOR_BIT, views[i]),
                "failed to create image view");
     }

@@ -3,40 +3,47 @@
 
 #include "command_pool.hpp"
 #include "device.hpp"
-#include "hl_vulkan.hpp"
 
 namespace HLVulkan {
 
-    class Buffer {
+  class Buffer {
 
-      private:
-        Device device;
-        VkDeviceSize size;
-        VkBufferUsageFlags usage;
-        VkBuffer buffer = VK_NULL_HANDLE;
-        VkDeviceMemory memory = VK_NULL_HANDLE;
-        VkMemoryPropertyFlags memProperties = 0;
+  public:
+    static VkResult create(VkDevice device, VkDeviceSize size,
+                           VkBufferUsageFlags usage, VkBuffer &buffer);
 
-        VkResult bind();
+    Buffer(VkPhysicalDevice phyDev, VkDevice device, VkDeviceSize size,
+           VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
 
-      public:
-        static VkResult createBuffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage, VkBuffer &buffer);
+    Buffer(Buffer &other) = delete;
 
-        Buffer(Device device, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+    Buffer &operator=(Buffer &other) = delete;
 
-        Buffer(Device device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+    Buffer(Buffer &&other);
 
-        VkResult allocateBuffer(VkDeviceSize size);
+    Buffer &operator=(Buffer &&other);
 
-        VkResult mapAndCopy(const void *dataToCopy, size_t size);
+    VkResult mapAndCopy(const void *dataToCopy, size_t size);
 
-        VkResult copyTo(const Buffer &dstBuffer, CommandPool &commandPool);
+    VkResult copyTo(const Buffer &dstBuffer, CommandPool &commandPool);
 
-        VkBufferUsageFlags getUsageFlags();
-        VkBuffer getBuffer();
+    VkBuffer operator*() const;
 
-        ~Buffer();
-    };
+    VkBufferUsageFlags getUsageFlags() const;
+
+    virtual ~Buffer();
+
+  private:
+    VkDevice device = VK_NULL_HANDLE;
+
+    VkDeviceSize size;
+    VkBufferUsageFlags usage;
+    VkMemoryPropertyFlags memProperties;
+    VkBuffer handle = VK_NULL_HANDLE;
+    VkDeviceMemory memory = VK_NULL_HANDLE;
+
+    VkResult bind(VkPhysicalDevice phyDev);
+  };
 
 } // namespace HLVulkan
 

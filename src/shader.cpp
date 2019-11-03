@@ -61,7 +61,7 @@ namespace HLVulkan {
 
   VkPipelineShaderStageCreateInfo Shader::getInfo() const { return shaderInfo; }
 
-  int Shader::shaderFromFile(const std::string &filename,
+  uint32_t Shader::shaderFromFile(const std::string &filename,
                              std::vector<char> &code) {
     // Open the file in read binary mode
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
