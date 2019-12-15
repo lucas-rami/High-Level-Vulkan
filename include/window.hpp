@@ -26,6 +26,39 @@ namespace HLVulkan {
     Window(const std::string &windowName, int width, int height);
 
     /**
+     * @brief Creates a Vukan surface using the GLFW window.
+     *
+     * @param[in] instance A Vulkan instance.
+     * @param[out] surface A Vulakn surface.
+     *
+     * @return VK_SUCCESS if surface creation was successful, a Vulkan error
+     * code otherwise.
+     */
+    VkResult createWindowSurface(VkInstance instance, VkSurfaceKHR &surface);
+
+    /**
+     * @brief Get the size of the window framebuffer.
+     *
+     * @param[out] width The framebuffer's width.
+     * @param[out] height The framebuffer's height.
+     */
+    void getFramebufferSize(int &width, int &height) const;
+
+    /**
+     * @brief Sets/Overwrites the GLFW resize callback.
+     *
+     * @param[in] callback The new callback.
+     */
+    void setResizeCallback(GLFWframebuffersizefun callback) const;
+
+    /**
+     * @brief Sets/Overwrites the GLFW user pointer.
+     *
+     * @param[in] userPtr The new user pointer.
+     */
+    void setUserPointer(void *userPtr) const;
+
+    /**
      * @brief Deleted copy-constructor.
      */
     Window(Window &other) = delete;
@@ -46,32 +79,13 @@ namespace HLVulkan {
     Window &operator=(Window &&other);
 
     /**
-     * @brief Sets/Overwrites the GLFW resize callback.
-     *
-     * @param[in] callback The new callback.
-     */
-    void setResizeCallback(GLFWframebuffersizefun callback) const;
-
-    /**
-     * @brief Sets/Overwrites the GLFW user pointer.
-     *
-     * @param[in] userPtr The new user pointer.
-     */
-    void setUserPointer(void *userPtr) const;
-
-    /**
-     * @brief Returns a pointer to the packaged GLFWwindow.
-     */
-    GLFWwindow *operator*() const;
-
-    /**
      * @brief Destroys the created window. Terminates the GLFW context.
      */
     virtual ~Window();
 
   private:
     // The window
-    GLFWwindow *window = nullptr;
+    GLFWwindow *window{nullptr};
   };
 
 } // namespace HLVulkan

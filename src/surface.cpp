@@ -7,9 +7,17 @@ namespace HLVulkan {
 
   Surface::Surface(VkInstance instance, Window &&window)
       : instance(instance), window(std::move(window)) {
-    VK_THROW(glfwCreateWindowSurface(instance, *window, nullptr, &surface),
-             "failed to create surface");
+    VK_THROW(window.createWindowSurface(instance, surface),
+             "failed to create surace");
   }
+
+  void Surface::getFramebufferSize(int &width, int &height) const {
+    window.getFramebufferSize(width, height);
+  }
+
+  VkInstance Surface::getInstance() const { return instance; }
+
+  VkSurfaceKHR Surface::operator*() const { return surface; }
 
   Surface::Surface(Surface &&other)
       : instance(other.instance), window(std::move(other.window)),
@@ -28,12 +36,6 @@ namespace HLVulkan {
     }
     return *this;
   }
-
-  VkSurfaceKHR Surface::operator*() const { return surface; }
-
-  VkInstance Surface::getInstance() const { return instance; }
-
-  GLFWwindow *Surface::getWindow() const { return *window; }
 
   Surface::~Surface() {
     if (surface != VK_NULL_HANDLE) {

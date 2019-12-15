@@ -20,6 +20,11 @@ namespace HLVulkan {
     Instance(const std::string &appName);
 
     /**
+     * @brief Returns the packaged VkInstance.
+     */
+    VkInstance operator*() const;
+
+    /**
      * @brief Deleted copy-constructor.
      */
     Instance(Instance &other) = delete;
@@ -40,18 +45,13 @@ namespace HLVulkan {
     Instance &operator=(Instance &&other);
 
     /**
-     * @brief Returns the packaged VkInstance.
-     */
-    VkInstance operator*() const;
-
-    /**
      * @brief Destroys the created instance.
      */
     virtual ~Instance();
 
   private:
     // The instance
-    VkInstance instance = VK_NULL_HANDLE;
+    VkInstance instance{VK_NULL_HANDLE};
   };
 
 } // namespace HLVulkan

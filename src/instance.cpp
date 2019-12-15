@@ -45,7 +45,7 @@ namespace HLVulkan {
     std::vector<const char *> glfwExt = glfwRequiredExt();
     ASSERT_FAIL(glfwAreExtSupported(glfwExt), "glfw extensions not supported");
 
-    // Created the instance
+    // Create the instance
     VkApplicationInfo appInfo = {};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = appName.c_str();
@@ -60,10 +60,12 @@ namespace HLVulkan {
     createInfo.enabledExtensionCount = static_cast<uint32_t>(glfwExt.size());
     createInfo.ppEnabledExtensionNames = glfwExt.data();
 
-    // Create the Vulkan instance and fill in &instance
+    // Create the Vulkan instance
     VK_THROW(vkCreateInstance(&createInfo, nullptr, &instance),
              "failed to create instance");
   }
+
+  VkInstance Instance::operator*() const { return instance; }
 
   Instance::Instance(Instance &&other) : instance(other.instance) {
     other.instance = VK_NULL_HANDLE;
@@ -77,8 +79,6 @@ namespace HLVulkan {
     }
     return *this;
   }
-
-  VkInstance Instance::operator*() const { return instance; }
 
   Instance::~Instance() {
     if (instance != VK_NULL_HANDLE) {

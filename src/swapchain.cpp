@@ -44,14 +44,14 @@ namespace HLVulkan {
     return bestMode;
   }
 
-  VkExtent2D chooseExtent(GLFWwindow *window,
+  VkExtent2D chooseExtent(const Surface &surface,
                           const VkSurfaceCapabilitiesKHR &capabilities) {
     if (capabilities.currentExtent.width !=
         std::numeric_limits<uint32_t>::max()) {
       return capabilities.currentExtent;
     } else {
       int width, height;
-      glfwGetFramebufferSize(window, &width, &height);
+      surface.getFramebufferSize(width, height);
 
       VkExtent2D actualExtent = {static_cast<uint32_t>(width),
                                  static_cast<uint32_t>(height)};
@@ -73,7 +73,7 @@ namespace HLVulkan {
     SCSupport deviceSupport = device.getSwapchainSupport();
     surfaceFormat = chooseSurfaceFormat(deviceSupport.formats);
     presentMode = choosePresentMode(deviceSupport.presentModes);
-    extent = chooseExtent(surface.getWindow(), deviceSupport.capabilities);
+    extent = chooseExtent(surface, deviceSupport.capabilities);
 
     // Decide on the number of images in the swapchain
     uint32_t imageCount = deviceSupport.capabilities.minImageCount + 1;
@@ -128,7 +128,7 @@ namespace HLVulkan {
     views.resize(count);
     for (size_t i = 0; i < count; ++i) {
       VK_THROW(Image::createView(*device, images[i], surfaceFormat.format,
-                                      VK_IMAGE_ASPECT_COLOR_BIT, views[i]),
+                                 VK_IMAGE_ASPECT_COLOR_BIT, views[i]),
                "failed to create image view");
     }
   }

@@ -22,6 +22,26 @@ namespace HLVulkan {
     Surface(VkInstance instance, Window &&window);
 
     /**
+     * @brief Get the size of the underlying window framebuffer.
+     *
+     * @param[out] width The framebuffer's width.
+     * @param[out] height The framebuffer's height.
+     */
+    void getFramebufferSize(int &width, int &height) const;
+
+    /**
+     * @brief Returns the packaged VkSurfaceKHR.
+     */
+    VkSurfaceKHR operator*() const;
+
+    /**
+     * @brief Retunrs the Vulkan instance associated to the surface.
+     *
+     * @return The associated Vulkan instance.
+     */
+    VkInstance getInstance() const;
+
+    /**
      * @brief Deleted copy-constructor.
      */
     Surface(Surface &other) = delete;
@@ -42,36 +62,17 @@ namespace HLVulkan {
     Surface &operator=(Surface &&other);
 
     /**
-     * @brief Retunrs the Vulkan instance associated to the surface.
-     *
-     * @return The associated Vulkan instance.
-     */
-    VkInstance getInstance() const;
-
-    /**
-     * @brief Retunrs a pointer to the GLFW window associated to the surface.
-     *
-     * @return A pointer to the associated GLFW window.
-     */
-    GLFWwindow *getWindow() const;
-
-    /**
-     * @brief Returns the packaged VkSurfaceKHR.
-     */
-    VkSurfaceKHR operator*() const;
-
-    /**
      * @brief Destroys the created surface.
      */
     virtual ~Surface();
 
   private:
     // The instance associated with the surface
-    VkInstance instance = VK_NULL_HANDLE;
+    VkInstance instance{VK_NULL_HANDLE};
     // The window associated with the surface
     Window window;
     // The Vulkan surface
-    VkSurfaceKHR surface = VK_NULL_HANDLE;
+    VkSurfaceKHR surface{VK_NULL_HANDLE};
   };
 
 } // namespace HLVulkan
