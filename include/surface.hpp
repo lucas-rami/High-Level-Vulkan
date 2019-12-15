@@ -30,7 +30,9 @@ namespace HLVulkan {
     void getFramebufferSize(int &width, int &height) const;
 
     /**
-     * @brief Returns the packaged VkSurfaceKHR.
+     * @brief Get the Vulkan surface.
+     * 
+     * @return The packaged Vulakn surface.
      */
     VkSurfaceKHR operator*() const;
 

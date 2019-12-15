@@ -10,13 +10,12 @@
 namespace HLVulkan {
 
   /**
-   * @brief Represents a Vulkan-usable logical device. It also holds queue
-   * handles for the device.
+   * @brief Packages a VkDevice together with queue handles for the device.
    */
   class Device {
   public:
     /**
-     * @brief Creates a logical device to be used by Vulkan.
+     * @brief Creates a logical device.
      *
      * The created device is compliant with the passed QueueRequest object, i.e.
      * its retrieved queues have the capabilities defined in the request.
@@ -30,35 +29,6 @@ namespace HLVulkan {
      * be created.
      */
     Device(const Surface &surface, const std::vector<Queue> &reqQueues);
-
-    /**
-     * @brief Deleted copy-constructor.
-     */
-    Device(Device &other) = delete;
-
-    /**
-     * @brief Deleted copy-assignment operator.
-     */
-    Device &operator=(Device &other) = delete;
-
-    /**
-     * @brief Move-constructor.
-     */
-    Device(Device &&other);
-
-    /**
-     * @brief Move-assignment operator.
-     */
-    Device &operator=(Device &&other);
-
-    // @TODO doc
-    SCSupport getSwapchainSupport() const;
-
-    // @TODO doc
-    std::optional<uint32_t> getQueueFamily(VkFlags flags) const;
-
-    // @TODO doc
-    std::optional<uint32_t> getPresentQueueFamily() const;
 
     /**
      * @brief Finds a supported format on the device among an ordered list of
@@ -87,17 +57,68 @@ namespace HLVulkan {
     VkFormat findDepthFormat() const;
 
     /**
-     * @brief Returns the packaged VkDevice.
+     * @brief Get the Vulkan device.
+     *
+     * @return The packaged Vulkan instance.
      */
     VkDevice operator*() const;
+
+    /**
+     * @brief Get swapchain support for this deive.
+     *
+     * @return The swapchain support associated to this device.
+     */
+    SCSupport getSwapchainSupport() const;
+
+    /**
+     * @brief Get the family of an allocated queue handle on the device which
+     * has (at least) certain capabilities.
+     *
+     * @param[in] A set of capabiltiies for the queue family.
+     *
+     * @return The first queue family with certain capabilities for which there
+     * is an allocated queue handle on the device. An empty value if there is no
+     * such queue.
+     */
+    std::optional<uint32_t> getQueueFamily(VkFlags flags) const;
+
+    /**
+     * @brief Get the family of an allocated queue handle on the device which
+     * has presentation support.
+     *
+     * @return The first queue family with presentation support for which there
+     * is an allocated queue handle on the device. An empty value if there is no
+     * such queue.
+     */
+    std::optional<uint32_t> getPresentQueueFamily() const;
+
+    /**
+     * @brief Deleted copy-constructor.
+     */
+    Device(Device &other) = delete;
+
+    /**
+     * @brief Deleted copy-assignment operator.
+     */
+    Device &operator=(Device &other) = delete;
+
+    /**
+     * @brief Move-constructor.
+     */
+    Device(Device &&other);
+
+    /**
+     * @brief Move-assignment operator.
+     */
+    Device &operator=(Device &&other);
 
     ~Device();
 
   private:
     // The physical device
-    VkPhysicalDevice physical = VK_NULL_HANDLE;
+    VkPhysicalDevice physical{VK_NULL_HANDLE};
     // The logical device
-    VkDevice logical = VK_NULL_HANDLE;
+    VkDevice logical{VK_NULL_HANDLE};
     // Defines the swapchain support for the device
     SCSupport scSupport;
     // Queues instantiated from the device

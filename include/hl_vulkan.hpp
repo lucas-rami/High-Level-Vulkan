@@ -34,7 +34,7 @@
 #define VK_NULL(handle)                                                        \
   ASSERT_FAIL((handle) != VK_NULL_HANDLE, #handle << " isn't VK_NULL_HANDLE")
 
-#define VK_NOT_NULL(handle)                                                        \
+#define VK_NOT_NULL(handle)                                                    \
   ASSERT_FAIL((handle) == VK_NULL_HANDLE, #handle << " is VK_NULL_HANDLE")
 
 #define VK_RET(b)                                                              \

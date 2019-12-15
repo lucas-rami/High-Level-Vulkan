@@ -20,7 +20,9 @@ namespace HLVulkan {
     Instance(const std::string &appName);
 
     /**
-     * @brief Returns the packaged VkInstance.
+     * @brief Get the Vulakn instance.
+     * 
+     * @return The packaged Vulkan instance.
      */
     VkInstance operator*() const;
 

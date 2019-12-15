@@ -30,7 +30,8 @@ namespace HLVulkan {
     return requiredExtensions.empty();
   }
 
-  Device::Device(const Surface &surface, const std::vector<Queue> &reqQueues) {
+  Device::Device(const Surface &surface, const std::vector<Queue> &reqQueues)
+      : queues(reqQueues) {
 
     queues = reqQueues;
 
@@ -117,24 +118,37 @@ namespace HLVulkan {
     }
   }
 
-  Device::Device(Device &&other)
-      : physical(other.physical), logical(other.logical),
-        scSupport(std::move(other.scSupport)), queues(std::move(other.queues)) {
-    other.logical = VK_NULL_HANDLE;
-  }
+  VkFormat Device::findSupportedFormat(const std::vector<VkFormat> &candidates,
+                                       VkImageTiling tiling,
+                                       VkFormatFeatureFlags features) const {
 
-  Device &Device::operator=(Device &&other) {
-    // Self-assignment detection
-    if (&other != this) {
-      physical = other.physical;
-      logical = other.logical;
-      scSupport = std::move(other.scSupport);
-      queues = std::move(other.queues);
+    // Check each candidate format for the necessary features
+    for (const auto format : candidates) {
+      VkFormatProperties props;
+      vkGetPhysicalDeviceFormatProperties(physical, format, &props);
 
-      other.logical = VK_NULL_HANDLE;
+      if (tiling == VK_IMAGE_TILING_LINEAR &&
+          (props.linearTilingFeatures & features) == features) {
+        return format;
+      } else if (tiling == VK_IMAGE_TILING_OPTIMAL &&
+                 (props.optimalTilingFeatures & features) == features) {
+        return format;
+      }
     }
-    return *this;
+
+    // No candidate format was found with the necessary features
+    return VK_FORMAT_UNDEFINED;
   }
+
+  VkFormat Device::findDepthFormat() const {
+    return findSupportedFormat({VK_FORMAT_D32_SFLOAT,
+                                VK_FORMAT_D32_SFLOAT_S8_UINT,
+                                VK_FORMAT_D24_UNORM_S8_UINT},
+                               VK_IMAGE_TILING_OPTIMAL,
+                               VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+  }
+
+  VkDevice Device::operator*() const { return logical; }
 
   SCSupport Device::getSwapchainSupport() const { return scSupport; }
 
@@ -156,38 +170,24 @@ namespace HLVulkan {
     return {};
   }
 
-  VkFormat Device::findSupportedFormat(const std::vector<VkFormat> &candidates,
-                                       VkImageTiling tiling,
-                                       VkFormatFeatureFlags features) const {
+  Device::Device(Device &&other)
+      : physical(other.physical), logical(other.logical),
+        scSupport(std::move(other.scSupport)), queues(std::move(other.queues)) {
+    other.logical = VK_NULL_HANDLE;
+  }
 
-    // Check each candidate format for the necessary features
-    for (const auto format : candidates) {
-      VkFormatProperties props;
-      vkGetPhysicalDeviceFormatProperties(physical, format, &props);
+  Device &Device::operator=(Device &&other) {
+    // Self-assignment detection
+    if (&other != this) {
+      physical = other.physical;
+      logical = other.logical;
+      scSupport = std::move(other.scSupport);
+      queues = std::move(other.queues);
 
-      if (tiling == VK_IMAGE_TILING_LINEAR &&
-          (props.linearTilingFeatures & features) == features) {
-        return format;
-      } else if (tiling == VK_IMAGE_TILING_OPTIMAL &&
-                 (props.optimalTilingFeatures & features) == features) {
-        return format;
-      }
+      other.logical = VK_NULL_HANDLE;
     }
-
-    // No candidate format was found with the necessary features
-    FAIL("failed to find supported format");
-    return VK_FORMAT_UNDEFINED;
+    return *this;
   }
-
-  VkFormat Device::findDepthFormat() const {
-    return findSupportedFormat({VK_FORMAT_D32_SFLOAT,
-                                VK_FORMAT_D32_SFLOAT_S8_UINT,
-                                VK_FORMAT_D24_UNORM_S8_UINT},
-                               VK_IMAGE_TILING_OPTIMAL,
-                               VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-  }
-
-  VkDevice Device::operator*() const { return logical; }
 
   Device::~Device() {
     if (logical != VK_NULL_HANDLE) {
