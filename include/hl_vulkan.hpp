@@ -27,27 +27,15 @@
 
 #define FAIL(err) ASSERT_FAIL(false, err)
 
-#define VK_THROW(res, err) ASSERT_THROW((res) == VK_SUCCESS, err)
-
 #define VK_FAIL(res, err) ASSERT_FAIL((res) == VK_SUCCESS, err)
 
-#define VK_NULL(handle)                                                        \
-  {                                                                            \
-    if ((handle) != VK_NULL_HANDLE) {                                          \
-      std::cout << "[FATAL]: " << #handle << " isn't VK_NULL_HANDLE"           \
-                << " in " << __FILE__ << " at line " << __LINE__ << std::endl; \
-      assert(false);                                                           \
-    }                                                                          \
-  }
+#define VK_THROW(res, err) ASSERT_THROW((res) == VK_SUCCESS, err)
 
-#define VK_NOT_NULL(handle)                                                    \
-  {                                                                            \
-    if ((handle) == VK_NULL_HANDLE) {                                          \
-      std::cout << "[FATAL]: " << #handle << " is VK_NULL_HANDLE"              \
-                << " in " << __FILE__ << " at line " << __LINE__ << std::endl; \
-      assert(false);                                                           \
-    }                                                                          \
-  }
+#define VK_NULL(handle)                                                        \
+  ASSERT_FAIL((handle) != VK_NULL_HANDLE, #handle << " isn't VK_NULL_HANDLE")
+
+#define VK_NULL(handle)                                                        \
+  ASSERT_FAIL((handle) == VK_NULL_HANDLE, #handle << " is VK_NULL_HANDLE")
 
 #define VK_RET(b)                                                              \
   {                                                                            \
@@ -73,8 +61,7 @@ namespace HLVulkan {
   bool hasStencilComponent(VkFormat format);
 
   /**
-   * @brief Finds a suitable memory type on a device given a bitmask of
-   * supported memory types and a set of desired properties.
+   * @brief Finds a suitable memory type on a device.
    *
    * @param[in] phyDevice A physical device.
    * @param[in] typeFilter A bitmask of supported memory types on the device.
