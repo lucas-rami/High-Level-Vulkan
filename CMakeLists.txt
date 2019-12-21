@@ -24,7 +24,6 @@ set(SOURCES ${SRC_DIR}/buffer.cpp
             ${SRC_DIR}/pipeline.cpp
             ${SRC_DIR}/pipeline_factory.cpp
             ${SRC_DIR}/pipeline_spec.cpp
-            ${SRC_DIR}/queue.cpp
             ${SRC_DIR}/render_pass.cpp
             ${SRC_DIR}/render_pass_factory.cpp
             ${SRC_DIR}/render_pass_spec.cpp

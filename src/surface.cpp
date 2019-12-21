@@ -5,9 +5,9 @@
 
 namespace HLVulkan {
 
-  Surface::Surface(VkInstance instance, Window &&window)
-      : instance(instance), window(std::move(window)) {
-    VK_THROW(window.createWindowSurface(instance, surface),
+  Surface::Surface(const Instance &instance, Window &&window)
+      : instance(*instance), window(std::move(window)) {
+    VK_THROW(window.createWindowSurface(*instance, surface),
              "failed to create surace");
   }
 

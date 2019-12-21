@@ -30,13 +30,16 @@ namespace HLVulkan {
     return requiredExtensions.empty();
   }
 
-  Device::Device(const Surface &surface, const std::vector<Queue> &reqQueues)
-      : queues(reqQueues) {
+  Device::Device(const Surface &surface,
+                 const std::vector<QueueDesc> &queuesDesc) {
 
-    queues = reqQueues;
+    // ***** Init Queue structures *****
+    size_t nb_queues = queuesDesc.size();
+    for (size_t i = 0; i < nb_queues; ++i) {
+      queues.push_back(Queue(queuesDesc[i]));
+    }
 
     // ***** Pick a physical device *****
-
     auto instance = surface.getInstance();
 
     // Get list of compatible physical devices
@@ -68,8 +71,7 @@ namespace HLVulkan {
         continue;
       }
       // Check for queue support
-      if (Queue::checkSupport(phyDev, *surface, queues, queueSupport) !=
-          VK_SUCCESS) {
+      if (checkSupport(phyDev, *surface, queueSupport) != VK_SUCCESS) {
         continue;
       }
 
@@ -110,7 +112,7 @@ namespace HLVulkan {
 
     // Create the logical device
     VK_THROW(vkCreateDevice(physical, &createInfo, nullptr, &logical),
-             "failed to create logical device!");
+             "failed to create logical device");
 
     // ***** Retrieve queue handles *****
     for (auto &queue : queues) {
@@ -152,19 +154,13 @@ namespace HLVulkan {
 
   SCSupport Device::getSwapchainSupport() const { return scSupport; }
 
-  std::optional<uint32_t> Device::getQueueFamily(VkFlags flags) const {
+  std::optional<uint32_t> Device::getQueueFamily(const QueueDesc &desc) const {
     for (const auto &queue : queues) {
-      if (flags & queue.flags == queue.flags) {
-        return queue.family;
-      }
-    }
-    return {};
-  }
-
-  std::optional<uint32_t> Device::getPresentQueueFamily() const {
-    for (const auto &queue : queues) {
-      if (queue.present) {
-        return queue.family;
+      auto queueFlags = queue.desc.flags;
+      if (desc.flags & queueFlags == queueFlags) {
+        if (!desc.presentSupport || queue.desc.presentSupport) {
+          return queue.family;
+        }
       }
     }
     return {};
@@ -193,6 +189,60 @@ namespace HLVulkan {
     if (logical != VK_NULL_HANDLE) {
       vkDestroyDevice(logical, nullptr);
     }
+  }
+
+  VkResult Device::checkSupport(VkPhysicalDevice device, VkSurfaceKHR surface,
+                                bool &supportOK) {
+
+    // Get list of queue families for the device
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
+                                             nullptr);
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
+                                             queueFamilies.data());
+
+    // Check that the device has queue families with required flags
+    for (auto &queue : queues) {
+      // Queue family index
+      uint32_t i = 0;
+      bool found = false;
+
+      for (const auto &family : queueFamilies) {
+        if (family.queueCount > 0) {
+          // Check for support
+          if (family.queueFlags & queue.desc.flags == queue.desc.flags) {
+            if (queue.desc.presentSupport) {
+              VkBool32 support = false;
+              VK_RET(vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface,
+                                                          &support));
+              if (support) {
+                queue.family = i;
+                found = true;
+              }
+            } else {
+              queue.family = i;
+              found = true;
+            }
+          }
+
+          // Check whether the family had required capabilities
+          if (found) {
+            break;
+          }
+        }
+        ++i;
+      }
+
+      // Check whether any family had required capabilities
+      if (!found) {
+        supportOK = false;
+        return VK_SUCCESS;
+      }
+    }
+
+    supportOK = true;
+    return VK_SUCCESS;
   }
 
 } // namespace HLVulkan

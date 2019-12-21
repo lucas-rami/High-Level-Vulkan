@@ -3,16 +3,14 @@
 
 #include "device.hpp"
 #include "hl_vulkan.hpp"
-#include "queue.hpp"
 
 namespace HLVulkan {
 
   class CommandPool {
 
   public:
-    CommandPool(VkDevice device, Queue queue);
-
-    CommandPool(VkDevice device, Queue queue, uint32_t count);
+    CommandPool(VkDevice device, uint32_t count, uint32_t queueFamily,
+                VkQueue queue);
 
     CommandPool(const CommandPool &pool) = delete;
 
@@ -32,7 +30,8 @@ namespace HLVulkan {
 
   private:
     VkDevice device;
-    Queue queue;
+    uint32_t queueFamily;
+    VkQueue queue;
 
     VkCommandPool handle = VK_NULL_HANDLE;
     std::vector<VkCommandBuffer> commands;

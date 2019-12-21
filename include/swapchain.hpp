@@ -12,7 +12,7 @@ namespace HLVulkan {
 
   private:
     // The swapchain handle
-    VkSwapchainKHR swapchain = VK_NULL_HANDLE;
+    VkSwapchainKHR swapchain{VK_NULL_HANDLE};
     // Surface format
     VkSurfaceFormatKHR surfaceFormat;
     // Presentation mode

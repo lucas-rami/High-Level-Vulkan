@@ -2,23 +2,13 @@
 
 namespace HLVulkan {
 
-  CommandPool::CommandPool(VkDevice device, Queue queue)
-      : device(device), queue(queue) {
+  CommandPool::CommandPool(VkDevice device, uint32_t count,
+                           uint32_t queueFamily, VkQueue queue)
+      : device(device), queueFamily(queueFamily), queue(queue) {
 
     VkCommandPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    poolInfo.queueFamilyIndex = queue.family;
-
-    VK_THROW(vkCreateCommandPool(device, &poolInfo, nullptr, &handle),
-             "command pool creation failed");
-  }
-
-  CommandPool::CommandPool(VkDevice device, Queue queue, uint32_t count)
-      : device(device), queue(queue) {
-
-    VkCommandPoolCreateInfo poolInfo = {};
-    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    poolInfo.queueFamilyIndex = queue.family;
+    poolInfo.queueFamilyIndex = queueFamily;
 
     VK_THROW(vkCreateCommandPool(device, &poolInfo, nullptr, &handle),
              "command pool creation failed");
@@ -85,7 +75,7 @@ namespace HLVulkan {
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &command;
-    if ((ret = vkQueueSubmit(queue.handle, 1, &submitInfo, VK_NULL_HANDLE)) !=
+    if ((ret = vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE)) !=
         VK_SUCCESS) {
       // Queue submission failed, free buffer and return
       vkFreeCommandBuffers(device, handle, 1, &command);
@@ -93,7 +83,7 @@ namespace HLVulkan {
     }
 
     // Wait for the queue to idle
-    ret = vkQueueWaitIdle(queue.handle);
+    ret = vkQueueWaitIdle(queue);
     vkFreeCommandBuffers(device, handle, 1, &command);
     return ret;
   }

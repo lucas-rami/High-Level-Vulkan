@@ -84,8 +84,9 @@ namespace HLVulkan {
 
     // Get queue families
     uint32_t queueFamilyIndices[2];
-    auto graphics = device.getQueueFamily(VK_QUEUE_GRAPHICS_BIT);
-    auto present = device.getPresentQueueFamily();
+    auto graphics =
+        device.getQueueFamily(Device::QueueDesc(VK_QUEUE_GRAPHICS_BIT, false));
+    auto present = device.getQueueFamily(Device::QueueDesc(0, true));
     ASSERT_THROW(graphics.has_value() && present.has_value(),
                  "device doesn't have a graphics or present queue");
     queueFamilyIndices[0] = *graphics;

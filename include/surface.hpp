@@ -16,10 +16,10 @@ namespace HLVulkan {
     /**
      * @brief Creates a Vulkan surface.
      *
-     * @param[in] instance The associated Vulkan instance.
-     * @param[in] window The associated GLFW window.
+     * @param[in] instance A Vulkan instance.
+     * @param[in] window A GLFW window.
      */
-    Surface(VkInstance instance, Window &&window);
+    Surface(const Instance &instance, Window &&window);
 
     /**
      * @brief Get the size of the underlying window framebuffer.
@@ -31,13 +31,13 @@ namespace HLVulkan {
 
     /**
      * @brief Get the Vulkan surface.
-     * 
+     *
      * @return The packaged Vulakn surface.
      */
     VkSurfaceKHR operator*() const;
 
     /**
-     * @brief Retunrs the Vulkan instance associated to the surface.
+     * @brief Returns the Vulkan instance associated to the surface.
      *
      * @return The associated Vulkan instance.
      */
