@@ -4,34 +4,6 @@ namespace HLVulkan {
 
   SCSupport::SCSupport() : capabilities(), formats(), presentModes() {}
 
-  SCSupport::SCSupport(const SCSupport &other)
-      : capabilities(other.capabilities), formats(other.formats),
-        presentModes(other.presentModes) {}
-
-  SCSupport &SCSupport::operator=(const SCSupport &other) {
-    // Self-assignment detection
-    if (&other != this) {
-      capabilities = other.capabilities;
-      formats = other.formats;
-      presentModes = other.presentModes;
-    }
-    return *this;
-  }
-
-  SCSupport::SCSupport(const SCSupport &&other)
-      : capabilities(capabilities), formats(std::move(other.formats)),
-        presentModes(std::move(other.presentModes)) {}
-
-  SCSupport &SCSupport::operator=(const SCSupport &&other) {
-    // Self-assignment detection
-    if (&other != this) {
-      capabilities = other.capabilities;
-      formats = std::move(other.formats);
-      presentModes = std::move(other.presentModes);
-    }
-    return *this;
-  }
-
   VkResult SCSupport::querySupport(VkPhysicalDevice device,
                                    VkSurfaceKHR surface) {
 
@@ -60,6 +32,34 @@ namespace HLVulkan {
     }
 
     return VK_SUCCESS;
+  }
+
+  SCSupport::SCSupport(const SCSupport &other)
+      : capabilities(other.capabilities), formats(other.formats),
+        presentModes(other.presentModes) {}
+
+  SCSupport &SCSupport::operator=(const SCSupport &other) {
+    // Self-assignment detection
+    if (&other != this) {
+      capabilities = other.capabilities;
+      formats = other.formats;
+      presentModes = other.presentModes;
+    }
+    return *this;
+  }
+
+  SCSupport::SCSupport(const SCSupport &&other)
+      : capabilities(capabilities), formats(std::move(other.formats)),
+        presentModes(std::move(other.presentModes)) {}
+
+  SCSupport &SCSupport::operator=(const SCSupport &&other) {
+    // Self-assignment detection
+    if (&other != this) {
+      capabilities = other.capabilities;
+      formats = std::move(other.formats);
+      presentModes = std::move(other.presentModes);
+    }
+    return *this;
   }
 
 } // namespace HLVulkan

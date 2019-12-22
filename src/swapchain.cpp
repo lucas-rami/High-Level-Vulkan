@@ -67,7 +67,8 @@ namespace HLVulkan {
     }
   }
 
-  SwapChain::SwapChain(const Surface &surface, const Device &device) {
+  SwapChain::SwapChain(const Surface &surface, const Device &device)
+      : device(*device) {
 
     // Choose swapchain characteristics
     SCSupport deviceSupport = device.getSwapchainSupport();
@@ -115,7 +116,7 @@ namespace HLVulkan {
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-    // Create the swapchain and fill in &swapChain
+    // Create the swapchain
     VK_THROW(vkCreateSwapchainKHR(*device, &createInfo, nullptr, &swapchain),
              "failed to create swapchain");
 
@@ -131,6 +132,36 @@ namespace HLVulkan {
       VK_THROW(Image::createView(*device, images[i], surfaceFormat.format,
                                  VK_IMAGE_ASPECT_COLOR_BIT, views[i]),
                "failed to create image view");
+    }
+  }
+
+  SwapChain::SwapChain(SwapChain &&other)
+      : device(other.device), swapchain(other.swapchain),
+        surfaceFormat(other.surfaceFormat), presentMode(other.presentMode),
+        extent(other.extent), images(std::move(other.images)),
+        views(std::move(other.views)) {
+    other.swapchain = VK_NULL_HANDLE;
+  }
+
+  SwapChain &SwapChain::operator=(SwapChain &&other) {
+    // Self-assignment detection
+    if (&other != this) {
+      device = other.device;
+      swapchain = other.swapchain;
+      surfaceFormat = other.surfaceFormat;
+      presentMode = other.presentMode;
+      extent = other.extent;
+      images = std::move(other.images);
+      views = std::move(other.views);
+
+      other.swapchain = VK_NULL_HANDLE;
+    }
+    return *this;
+  }
+
+  SwapChain::~SwapChain() {
+    if (swapchain != VK_NULL_HANDLE) {
+      vkDestroySwapchainKHR(device, swapchain, nullptr);
     }
   }
 

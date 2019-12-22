@@ -21,6 +21,20 @@ namespace HLVulkan {
     SCSupport();
 
     /**
+     * @brief Queries the swapchain support for a physical device and surface.
+     * When the method returns with success, the receiver object is filled with
+     * the capabilities, formats, and presentation modes supported for the
+     * device and surface. 
+     * 
+     * @param[in] device A physical device.
+     * @param[in] surface A surface.
+     * 
+     * @return A Vulkan error code if a call to the Vulkan API failed,
+     * VK_SUCCESS otherwise.
+     */
+    VkResult querySupport(VkPhysicalDevice device, VkSurfaceKHR surface);
+
+    /**
      * @brief Copy-constructor.
      */
     SCSupport(const SCSupport &other);
@@ -39,9 +53,6 @@ namespace HLVulkan {
      * @brief Move-assignment operator.
      */
     SCSupport &operator=(const SCSupport &&other);
-
-    // @TODO doc
-    VkResult querySupport(VkPhysicalDevice device, VkSurfaceKHR surface);
   };
 
 } // namespace HLVulkan

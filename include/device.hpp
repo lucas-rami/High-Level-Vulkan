@@ -127,7 +127,7 @@ namespace HLVulkan {
      */
     Device &operator=(Device &&other);
 
-    ~Device();
+    virtual ~Device();
 
   private:
     /**
