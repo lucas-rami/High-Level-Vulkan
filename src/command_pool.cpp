@@ -2,52 +2,40 @@
 
 namespace HLVulkan {
 
-  CommandPool::CommandPool(VkDevice device, uint32_t count,
-                           uint32_t queueFamily, VkQueue queue)
-      : device(device), queueFamily(queueFamily), queue(queue) {
+  CommandPool::CommandPool(const Device &device, const Device::QueueDesc &desc,
+                           uint32_t count)
+      : device(*device) {
 
+    // Get queue handle from device
+    auto queueFamily = device.getQueueFamily(desc, &queue);
+    ASSERT_THROW(queueFamily.has_value(), "failed to get queue from device")
+
+    // Create the command pool
     VkCommandPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    poolInfo.queueFamilyIndex = queueFamily;
-
-    VK_THROW(vkCreateCommandPool(device, &poolInfo, nullptr, &handle),
+    poolInfo.queueFamilyIndex = *queueFamily;
+    VK_THROW(vkCreateCommandPool(this->device, &poolInfo, nullptr, &pool),
              "command pool creation failed");
-    VK_THROW(allocateCommandBuffers(count),
-             "failed to allocate command buffers");
-  }
 
-  VkResult CommandPool::allocateCommandBuffers(uint32_t count) {
-
-    ASSERT_FAIL(count != 0, "count must be strictly positive");
-    // @TODO this is a big limitation
-    ASSERT_FAIL(commands.empty(),
-                "allocate should only be called once per command pool");
-
-    // Resize the vector
+    // Create command buffers
     commands.resize((size_t)count);
-
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = handle;
+    allocInfo.commandPool = pool;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = count;
-
-    VkResult ret;
-    if ((ret = vkAllocateCommandBuffers(device, &allocInfo, commands.data())) !=
-        VK_SUCCESS) {
-      // Resize the vector to 0 if the allocation fails
-      commands.resize(0);
-    }
-    return ret;
+    VK_THROW(
+        !vkAllocateCommandBuffers(this->device, &allocInfo, commands.data()),
+        "failed to allocate command buffers");
   }
 
-  VkResult CommandPool::beginSingleTimeCommand(VkCommandBuffer command) {
+  VkResult CommandPool::beginSingleTimeCommand(VkCommandBuffer &command) const {
 
     // Allocate the command buffer
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandPool = handle;
+    allocInfo.commandPool = pool;
     allocInfo.commandBufferCount = 1;
     VK_RET(vkAllocateCommandBuffers(device, &allocInfo, &command));
 
@@ -60,13 +48,13 @@ namespace HLVulkan {
     return VK_SUCCESS;
   }
 
-  VkResult CommandPool::endSingleTimeCommand(VkCommandBuffer command) {
+  VkResult CommandPool::endSingleTimeCommand(VkCommandBuffer &command) const {
 
     // End recording
     VkResult ret;
     if ((ret = vkEndCommandBuffer(command)) != VK_SUCCESS) {
       // Failed to end recording, free buffer and return
-      vkFreeCommandBuffers(device, handle, 1, &command);
+      vkFreeCommandBuffers(device, pool, 1, &command);
       return ret;
     }
 
@@ -78,13 +66,13 @@ namespace HLVulkan {
     if ((ret = vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE)) !=
         VK_SUCCESS) {
       // Queue submission failed, free buffer and return
-      vkFreeCommandBuffers(device, handle, 1, &command);
+      vkFreeCommandBuffers(device, pool, 1, &command);
       return ret;
     }
 
     // Wait for the queue to idle
     ret = vkQueueWaitIdle(queue);
-    vkFreeCommandBuffers(device, handle, 1, &command);
+    vkFreeCommandBuffers(device, pool, 1, &command);
     return ret;
   }
 
@@ -93,11 +81,30 @@ namespace HLVulkan {
     return commands[index];
   }
 
-  VkCommandPool CommandPool::getPool() const { return handle; }
+  VkCommandPool CommandPool::getPool() const { return pool; }
+
+  CommandPool::CommandPool(CommandPool &&other)
+      : device(other.device), queue(other.queue), pool(other.pool),
+        commands(std::move(other.commands)) {
+    other.pool = VK_NULL_HANDLE;
+  }
+
+  CommandPool &CommandPool::operator=(CommandPool &&other) {
+    // Self-assignment detection
+    if (&other != this) {
+      device = other.device;
+      queue = other.queue;
+      pool = other.pool;
+      commands = std::move(other.commands);
+
+      other.pool = VK_NULL_HANDLE;
+    }
+    return *this;
+  }
 
   CommandPool::~CommandPool() {
-    if (handle != VK_NULL_HANDLE) {
-      vkDestroyCommandPool(device, handle, nullptr);
+    if (pool != VK_NULL_HANDLE) {
+      vkDestroyCommandPool(device, pool, nullptr);
     }
   }
 

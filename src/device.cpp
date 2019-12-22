@@ -154,11 +154,15 @@ namespace HLVulkan {
 
   SCSupport Device::getSwapchainSupport() const { return scSupport; }
 
-  std::optional<uint32_t> Device::getQueueFamily(const QueueDesc &desc) const {
+  std::optional<uint32_t> Device::getQueueFamily(const QueueDesc &desc,
+                                                 VkQueue *handle) const {
     for (const auto &queue : queues) {
       auto queueFlags = queue.desc.flags;
       if (desc.flags & queueFlags == queueFlags) {
         if (!desc.presentSupport || queue.desc.presentSupport) {
+          if (handle != nullptr) {
+            *handle = queue.handle;
+          }
           return queue.family;
         }
       }

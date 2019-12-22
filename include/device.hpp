@@ -99,13 +99,16 @@ namespace HLVulkan {
      * @brief Get the family of an allocated queue handle on the device which
      * has (at least) certain capabilities.
      *
-     * @param[in] Capabiltiies for the queue family.
+     * @param[in] desc Capabilities for the queue family.
+     * @param[out] handle A user-provided pointer filled with a valid queue
+     * handle if the pointer isn't null and a family was found.
      *
      * @return The first queue family with certain capabilities for which there
      * is an allocated queue handle on the device. An empty value if there is no
      * such queue.
      */
-    std::optional<uint32_t> getQueueFamily(const QueueDesc &desc) const;
+    std::optional<uint32_t> getQueueFamily(const QueueDesc &desc,
+                                           VkQueue *handle = nullptr) const;
 
     /**
      * @brief Deleted copy-constructor.
