@@ -84,7 +84,7 @@ namespace HLVulkan {
     /**
      * @brief Get the Vulkan device.
      *
-     * @return The packaged Vulkan instance.
+     * @return The packaged Vulkan device.
      */
     VkDevice operator*() const;
 
