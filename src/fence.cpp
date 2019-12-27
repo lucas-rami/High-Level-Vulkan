@@ -19,7 +19,7 @@ namespace HLVulkan {
     }
   }
 
-  Fence::Fence(Fence &&other): device(other.device), fence(other.fence) {
+  Fence::Fence(Fence &&other) : device(other.device), fence(other.fence) {
     other.fence = VK_NULL_HANDLE;
   }
 

@@ -13,8 +13,10 @@ namespace HLVulkan {
   public:
     /**
      * @brief Creates a fence in the signaled state.
-     * 
-     * @param device The device to allocate the fence from.
+     *
+     * @param[in] device The device to allocate the fence from.
+     *
+     * @throw std::runtime_error If fence creation fails for some reason.
      */
     Fence(const Device &device);
 
@@ -48,7 +50,9 @@ namespace HLVulkan {
     virtual ~Fence();
 
   private:
+    // The device the fence is allocated from
     VkDevice device{VK_NULL_HANDLE};
+    // The fence
     VkFence fence{VK_NULL_HANDLE};
   };
 
