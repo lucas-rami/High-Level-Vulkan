@@ -2,14 +2,17 @@
 
 namespace HLVulkan {
 
-  std::vector<VkAttachmentDescription> RenderPassSpec::getAttachments() const {
-    return createAttachments();
+  void RenderPassSpec::getAttachments(
+      std::vector<VkAttachmentDescription> &attachments) const {
+    return createAttachments(attachments);
   }
-  std::vector<VkSubpassDescription> RenderPassSpec::getSubpasses() const {
-    return createSubpasses();
+  void RenderPassSpec::getSubpasses(
+      std::vector<VkSubpassDescription> &subpasses) const {
+    return createSubpasses(subpasses);
   }
-  std::vector<VkSubpassDependency> RenderPassSpec::getDependencies() const {
-    return createDependencies();
+  void RenderPassSpec::getDependencies(
+      std::vector<VkSubpassDependency> &dependencies) const {
+    return createDependencies(dependencies);
   }
 
   RenderPassSpec::~RenderPassSpec() {}

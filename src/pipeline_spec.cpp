@@ -32,7 +32,7 @@ namespace HLVulkan {
       VkPipelineDepthStencilStateCreateInfo &depthStencil) const {
     createDepthStencil(depthStencil);
   }
-
+  
   PipelineSpec::~PipelineSpec() {}
 
 } // namespace HLVulkan
