@@ -18,7 +18,6 @@ namespace HLVulkan {
                                           const std::vector<Shader> &shaders,
                                           VkRenderPass renderPass,
                                           Pipeline &pipeline);
-
   };
 
 } // namespace HLVulkan

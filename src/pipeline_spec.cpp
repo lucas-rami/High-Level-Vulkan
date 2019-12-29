@@ -2,32 +2,35 @@
 
 namespace HLVulkan {
 
-  VkPipelineInputAssemblyStateCreateInfo
-  PipelineSpec::getInputAssembly() const {
-    return createInputAssembly();
+  void PipelineSpec::getInputAssembly(
+      VkPipelineInputAssemblyStateCreateInfo &inputAssembly) const {
+    createInputAssembly(inputAssembly);
   }
-  std::vector<VkViewport> PipelineSpec::getViewports() const {
-    return createViewports();
+  void PipelineSpec::getViewports(std::vector<VkViewport> &viewports) const {
+    createViewports(viewports);
   }
-  std::vector<VkRect2D> PipelineSpec::getScissors() const {
-    return createScissors();
+  void PipelineSpec::getScissors(std::vector<VkRect2D> &scissors) const {
+    createScissors(scissors);
   }
-  VkPipelineRasterizationStateCreateInfo PipelineSpec::getRasterizer() const {
-    return createRasterizer();
+  void PipelineSpec::getRasterizer(
+      VkPipelineRasterizationStateCreateInfo &rasterizer) const {
+    createRasterizer(rasterizer);
   }
-  VkPipelineMultisampleStateCreateInfo PipelineSpec::getMultisampling() const {
-    return createMultisampling();
+  void PipelineSpec::getMultisampling(
+      VkPipelineMultisampleStateCreateInfo &multisampling) const {
+    createMultisampling(multisampling);
   }
-  std::vector<VkPipelineColorBlendAttachmentState>
-  PipelineSpec::getColorBlending() const {
-    return createColorBlending();
+  void PipelineSpec::getColorBlending(
+      std::vector<VkPipelineColorBlendAttachmentState> &colorBlends) const {
+    createColorBlending(colorBlends);
   }
-  std::vector<VkDescriptorSetLayout>
-  PipelineSpec::getDescriptorSetLayouts() const {
-    return createDescriptorSetLayouts();
+  void PipelineSpec::getDescriptorSetLayouts(
+      std::vector<VkDescriptorSetLayout> &descSetLayouts) const {
+    createDescriptorSetLayouts(descSetLayouts);
   }
-  VkPipelineDepthStencilStateCreateInfo PipelineSpec::getDepthStencil() const {
-    return createDepthStencil();
+  void PipelineSpec::getDepthStencil(
+      VkPipelineDepthStencilStateCreateInfo &depthStencil) const {
+    createDepthStencil(depthStencil);
   }
 
   PipelineSpec::~PipelineSpec() {}

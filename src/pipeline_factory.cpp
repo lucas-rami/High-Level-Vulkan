@@ -25,14 +25,16 @@ namespace HLVulkan {
     vertexInputInfo.pVertexAttributeDescriptions = attributes.data();
 
     // Input assembly
-    VkPipelineInputAssemblyStateCreateInfo inputAssembly =
-        pipeSpec.getInputAssembly();
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly;
+    pipeSpec.getInputAssembly(inputAssembly);
 
     // Viewports
-    std::vector<VkViewport> viewports = pipeSpec.getViewports();
+    std::vector<VkViewport> viewports;
+    pipeSpec.getViewports(viewports);
 
     // Scissors
-    std::vector<VkRect2D> scissors = pipeSpec.getScissors();
+    std::vector<VkRect2D> scissors;
+    pipeSpec.getScissors(scissors);
 
     // Viewport state
     VkPipelineViewportStateCreateInfo viewportState = {};
@@ -43,40 +45,39 @@ namespace HLVulkan {
     viewportState.pScissors = scissors.data();
 
     // Rasterizer
-    VkPipelineRasterizationStateCreateInfo rasterizer =
-        pipeSpec.getRasterizer();
+    VkPipelineRasterizationStateCreateInfo rasterizer;
+    pipeSpec.getRasterizer(rasterizer);
 
     // Multisampling
-    VkPipelineMultisampleStateCreateInfo multisampling =
-        pipeSpec.getMultisampling();
+    VkPipelineMultisampleStateCreateInfo multisampling;
+    pipeSpec.getMultisampling(multisampling);
 
     // Color blending
-    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments =
-        pipeSpec.getColorBlending();
+    std::vector<VkPipelineColorBlendAttachmentState> colorBlends;
+    pipeSpec.getColorBlending(colorBlends);
 
-    // Color blend state (depends on colorBlendAttachments)
+    // Color blend state (depends on colorBlends)
     VkPipelineColorBlendStateCreateInfo colorBlending = {};
     colorBlending.sType =
         VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     colorBlending.logicOpEnable = VK_FALSE;
-    colorBlending.attachmentCount =
-        static_cast<uint32_t>(colorBlendAttachments.size());
-    colorBlending.pAttachments = colorBlendAttachments.data();
+    colorBlending.attachmentCount = static_cast<uint32_t>(colorBlends.size());
+    colorBlending.pAttachments = colorBlends.data();
 
     // Descriptor set layouts
-    std::vector<VkDescriptorSetLayout> descriptorSetLayouts =
-        pipeSpec.getDescriptorSetLayouts();
+    std::vector<VkDescriptorSetLayout> descSetLayouts;
+    pipeSpec.getDescriptorSetLayouts(descSetLayouts);
 
-    // Pipeline layout (depends on descriptorSetLayouts)
+    // Pipeline layout (depends on descSetLayouts)
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount =
-        static_cast<uint32_t>(descriptorSetLayouts.size());
-    pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
+        static_cast<uint32_t>(descSetLayouts.size());
+    pipelineLayoutInfo.pSetLayouts = descSetLayouts.data();
 
     // Depth/Stencil
-    VkPipelineDepthStencilStateCreateInfo depthStencil =
-        pipeSpec.getDepthStencil();
+    VkPipelineDepthStencilStateCreateInfo depthStencil;
+    pipeSpec.getDepthStencil(depthStencil);
 
     // Shader stages
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages{shaders.size()};
