@@ -31,7 +31,7 @@ set(SOURCES ${SRC_DIR}/buffer.cpp
             ${SRC_DIR}/sc_support.cpp
             ${SRC_DIR}/surface.cpp
             ${SRC_DIR}/swapchain.cpp
-            ${SRC_DIR}/vertex_format.cpp
+            ${SRC_DIR}/vertex_spec.cpp
             ${SRC_DIR}/window.cpp
 )
 

@@ -100,7 +100,7 @@ namespace HLVulkan {
      * has (at least) certain capabilities.
      *
      * @param[in] desc Capabilities for the queue family.
-     * @param[out] handle A user-provided pointer filled with a valid queue
+     * @param[out] handle A user-provided pointer filled with a valid queue.
      * handle if the pointer isn't null and a family was found.
      *
      * @return The first queue family with certain capabilities for which there
@@ -130,6 +130,9 @@ namespace HLVulkan {
      */
     Device &operator=(Device &&other);
 
+    /**
+     * @brief Destructor.
+     */
     virtual ~Device();
 
   private:
