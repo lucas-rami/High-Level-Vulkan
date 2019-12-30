@@ -150,10 +150,6 @@ namespace HLVulkan {
                                VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
   }
 
-  VkDevice Device::operator*() const { return logical; }
-
-  SCSupport Device::getSwapchainSupport() const { return scSupport; }
-
   std::optional<uint32_t> Device::getQueueFamily(const QueueDesc &desc,
                                                  VkQueue *handle) const {
     for (const auto &queue : queues) {
@@ -169,6 +165,12 @@ namespace HLVulkan {
     }
     return {};
   }
+
+  VkDevice Device::operator*() const { return logical; }
+
+  VkPhysicalDevice Device::getPhysical() const { return physical; }
+
+  SCSupport Device::getSwapchainSupport() const { return scSupport; }
 
   Device::Device(Device &&other)
       : physical(other.physical), logical(other.logical),

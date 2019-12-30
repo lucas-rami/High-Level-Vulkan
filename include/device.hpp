@@ -82,20 +82,6 @@ namespace HLVulkan {
     VkFormat findDepthFormat() const;
 
     /**
-     * @brief Get the Vulkan device.
-     *
-     * @return The packaged Vulkan device.
-     */
-    VkDevice operator*() const;
-
-    /**
-     * @brief Get swapchain support for this deive.
-     *
-     * @return The swapchain support associated to this device.
-     */
-    SCSupport getSwapchainSupport() const;
-
-    /**
      * @brief Get the family of an allocated queue handle on the device which
      * has (at least) certain capabilities.
      *
@@ -109,6 +95,27 @@ namespace HLVulkan {
      */
     std::optional<uint32_t> getQueueFamily(const QueueDesc &desc,
                                            VkQueue *handle = nullptr) const;
+
+    /**
+     * @brief Get the Vulkan device.
+     *
+     * @return The packaged Vulkan device.
+     */
+    VkDevice operator*() const;
+
+    /**
+     * @brief Get the Vulkan physical device.
+     *
+     * @return The Vulkan physical device.
+     */
+    VkPhysicalDevice getPhysical() const;
+
+    /**
+     * @brief Get swapchain support for this deive.
+     *
+     * @return The swapchain support associated to this device.
+     */
+    SCSupport getSwapchainSupport() const;
 
     /**
      * @brief Deleted copy-constructor.
