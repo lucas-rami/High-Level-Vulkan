@@ -4,10 +4,12 @@
 
 namespace HLVulkan {
 
-  VkResult Image::create(VkDevice device, VkExtent2D extent, VkFormat format,
-                         VkImageTiling tiling, VkImageUsageFlags usage,
-                         VkImage &image) {
+  Image::Image(const Device &device, VkExtent2D extent, VkFormat format,
+               VkImageTiling tiling, VkImageUsageFlags usage,
+               VkImageAspectFlags aspect, VkMemoryPropertyFlags properties)
+      : device(*device), extent(extent), format(format) {
 
+    // Create image
     VkImageCreateInfo imageInfo = {};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -22,64 +24,35 @@ namespace HLVulkan {
     imageInfo.usage = usage;
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    VK_THROW(vkCreateImage(this->device, &imageInfo, nullptr, &image),
+             "failed to create image");
 
-    return vkCreateImage(device, &imageInfo, nullptr, &image);
-  }
-
-  VkResult Image::createView(VkDevice device, VkImage image, VkFormat format,
-                             VkImageAspectFlags aspect,
-                             VkImageView &imageView) {
-
-    VkImageViewCreateInfo viewInfo = {};
-    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    viewInfo.image = image;
-    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    viewInfo.format = format;
-    viewInfo.subresourceRange.aspectMask = aspect;
-    viewInfo.subresourceRange.baseMipLevel = 0;
-    viewInfo.subresourceRange.levelCount = 1;
-    viewInfo.subresourceRange.baseArrayLayer = 0;
-    viewInfo.subresourceRange.layerCount = 1;
-
-    return vkCreateImageView(device, &viewInfo, nullptr, &imageView);
-  }
-
-  Image::Image(VkPhysicalDevice phyDev, VkDevice device, VkExtent2D extent,
-               VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
-               VkImageAspectFlags aspect, VkMemoryPropertyFlags memProperties)
-      : device(device), extent(extent), format(format), tiling(tiling),
-        usage(usage), aspect(aspect), memProperties(memProperties) {
-    VK_THROW(Image::create(device, extent, format, tiling, usage, image),
-             "image creation failed");
-    VK_THROW(bind(phyDev), "buffer bind failed");
-    VK_THROW(Image::createView(device, image, format, aspect, imageView),
-             "image view creation failed");
-  }
-
-  VkResult Image::bind(VkPhysicalDevice phyDev) {
-
+    // Get memory requirements
     VkMemoryRequirements memRequirements;
-    vkGetImageMemoryRequirements(device, image, &memRequirements);
+    vkGetImageMemoryRequirements(this->device, image, &memRequirements);
 
+    // Allocate memory for image
     VkMemoryAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex =
-        findMemoryType(phyDev, memRequirements.memoryTypeBits, memProperties);
-    if (allocInfo.memoryTypeIndex == NO_SUITABLE_MEMORY_TYPE) {
-      return VK_ERROR_FEATURE_NOT_PRESENT;
-    }
+    allocInfo.memoryTypeIndex = findMemoryType(
+        device.getPhysical(), memRequirements.memoryTypeBits, properties);
+    VK_THROW(allocInfo.memoryTypeIndex == NO_SUITABLE_MEMORY_TYPE,
+             "failed to find memory type");
+    VK_THROW(vkAllocateMemory(this->device, &allocInfo, nullptr, &memory),
+             "failed to allocate image memory");
 
-    VK_RET(vkAllocateMemory(device, &allocInfo, nullptr, &memory));
-    return vkBindImageMemory(device, image, memory, 0);
+    // Bind memory to image
+    VK_THROW(vkBindImageMemory(this->device, image, memory, 0),
+             "failed to bind image");
+
+    // Create image view
+    VK_THROW(createView(this->device, image, format, aspect, imageView),
+             "failed to create iage view");
   }
 
-  VkResult Image::copyTo(const Image &dstImage, CommandPool &commandPool) {
-
-    ASSERT_FAIL(usage & VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                "source image doesn't have required usage flag");
-    ASSERT_FAIL(dstImage.usage & VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                "destination image doesn't have required usage flag");
+  VkResult Image::copyTo(const Image &dstImage,
+                         const CommandPool &commandPool) {
 
     VkCommandBuffer commandBuffer;
     VK_RET(commandPool.beginSingleTimeCommand(commandBuffer));
@@ -100,17 +73,8 @@ namespace HLVulkan {
     return commandPool.endSingleTimeCommand(commandBuffer);
   }
 
-  VkResult Image::copyFromBuffer(VkImageLayout layout, Buffer &srcBuffer,
-                                 CommandPool &commandPool) {
-
-    ASSERT_FAIL(
-        (srcBuffer.getUsageFlags() & VK_BUFFER_USAGE_TRANSFER_SRC_BIT) != 0,
-        "buffer doesn't have required usage flag");
-    ASSERT_FAIL((usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) != 0,
-                "image doesn't have required usage flag");
-    ASSERT_FAIL(layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL ||
-                    layout == VK_IMAGE_LAYOUT_GENERAL,
-                "image isn't in a compatible layout");
+  VkResult Image::copyFromBuffer(VkImageLayout layout, const Buffer &srcBuffer,
+                                 const CommandPool &commandPool) {
 
     VkCommandBuffer commandBuffer;
     VK_RET(commandPool.beginSingleTimeCommand(commandBuffer));
@@ -136,7 +100,7 @@ namespace HLVulkan {
 
   VkResult Image::transitionImageLayout(VkImageLayout oldLayout,
                                         VkImageLayout newLayout,
-                                        CommandPool &commandPool) {
+                                        const CommandPool &commandPool) {
 
     // Create memory barrier
     VkImageMemoryBarrier barrier = {};
@@ -207,9 +171,30 @@ namespace HLVulkan {
     return VK_SUCCESS;
   }
 
-  VkImage Image::getImage() const { return image; }
+  VkImage Image::operator*() const { return image; }
   VkImageView Image::getView() const { return imageView; }
   VkDeviceMemory Image::getMemory() const { return memory; }
+
+  Image::Image(Image &&other)
+      : device(other.device), extent(other.extent), format(other.format),
+        image(other.image), memory(other.memory), imageView(other.imageView) {
+    other.image = VK_NULL_HANDLE;
+  }
+
+  Image &Image::operator=(Image &&other) {
+    // Self-assignment detection
+    if (&other != this) {
+      device = other.device;
+      extent = other.extent;
+      format = other.format;
+      image = other.image;
+      memory = other.memory;
+      imageView = other.imageView;
+
+      other.image = VK_NULL_HANDLE;
+    }
+    return *this;
+  }
 
   Image::~Image() {
     if (image != VK_NULL_HANDLE) {
@@ -217,6 +202,24 @@ namespace HLVulkan {
       vkDestroyImage(device, image, nullptr);
       vkFreeMemory(device, memory, nullptr);
     }
+  }
+
+  VkResult Image::createView(VkDevice device, VkImage image, VkFormat format,
+                             VkImageAspectFlags aspect,
+                             VkImageView &imageView) {
+
+    VkImageViewCreateInfo viewInfo = {};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = image;
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format = format;
+    viewInfo.subresourceRange.aspectMask = aspect;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    return vkCreateImageView(device, &viewInfo, nullptr, &imageView);
   }
 
 } // namespace HLVulkan

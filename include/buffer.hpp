@@ -19,7 +19,7 @@ namespace HLVulkan {
      * @param[in] device The device to allocate the buffer from.
      * @param[in] size The buffer size.
      * @param[in] usage Usage flags for the buffer.
-     * @param[in] properties Property lags for the buffer memory.
+     * @param[in] properties Property flags for the buffer memory.
      *
      * @throw std::runtime_error If buffer creation fails for some reason.
      */
@@ -34,7 +34,7 @@ namespace HLVulkan {
      * @param[in] size The number of bytes to copy to the buffer, starting at
      * the address contained in dataToCopy.
      * 
-     * @return A Vulkan error code if a code to the Vulkan API fails, VK_SUCCESS
+     * @return A Vulkan error code if a call to the Vulkan API fails, VK_SUCCESS
      * otherwise.
      */
     VkResult mapAndCopy(const void *dataToCopy, size_t size);
@@ -46,7 +46,7 @@ namespace HLVulkan {
      * @param[in] commandPool The command pool to use to submit the memory copy
      * command.
      * 
-     * @return A Vulkan error code if a code to the Vulkan API fails, VK_SUCCESS
+     * @return A Vulkan error code if a call to the Vulkan API fails, VK_SUCCESS
      * otherwise.
      */
     VkResult copyTo(const Buffer &dstBuffer, const CommandPool &commandPool);
@@ -91,11 +91,11 @@ namespace HLVulkan {
     virtual ~Buffer();
 
   private:
-    // The device to allocate from
+    // The device to allocate the buffer from
     VkDevice device;
     // The buffer size
     VkDeviceSize size;
-    // Flags indicating buffer intended usage
+    // Flags indicating the buffer intended usage
     VkBufferUsageFlags usage;
     // Flags indicating properties for the buffer memory
     VkMemoryPropertyFlags memProperties;
